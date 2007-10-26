@@ -45,9 +45,9 @@ class TicketGanttChartPlugin(Component):
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
         baseday = req.args.get('baseday')
-        selectedmilestone = req.args.get('selectedmilestone')
-        showmyticket = req.args.get('showmyticket')
-#        self.log.debug("showmyticket:"+str(showmyticket))
+        selected_milestone = req.args.get('selected_milestone')
+        show_my_ticket = req.args.get('show_my_ticket')
+#        self.log.debug("show_my_ticket:"+str(show_my_ticket))
 #        self.log.debug("username="+req.authname)
 
         if baseday != None:
@@ -80,9 +80,9 @@ class TicketGanttChartPlugin(Component):
         db = self.env.get_db_cnx()
         cursor = db.cursor();
         sql = ""
-        if selectedmilestone == None or selectedmilestone == "":
+        if selected_milestone == None or selected_milestone == "":
            myticketsql = ""
-           if showmyticket=="on":
+           if show_my_ticket=="on":
                myticketsql = "WHERE owner = '" + req.authname + "'"
 
            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, milestone from ticket t "
@@ -92,14 +92,14 @@ class TicketGanttChartPlugin(Component):
                           "LEFT JOIN milestone m ON m.name = t.milestone %s ORDER by m.due , milestone , a.value ") % (myticketsql)
         else:
            myticketsql = ""
-           if showmyticket=="on":
+           if show_my_ticket=="on":
                myticketsql = "AND owner = '"+req.authname + "'"
            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, milestone from ticket t "
                           "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
                           "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
                           "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
                           "LEFT JOIN milestone m ON m.name = t.milestone WHERE milestone = '%s' %s ORDER by m.due , milestone , a.value "
-                  ) % (selectedmilestone, myticketsql)
+                  ) % (selected_milestone, myticketsql)
         self.log.debug(sql)
         cursor.execute(sql)
 
@@ -137,7 +137,7 @@ class TicketGanttChartPlugin(Component):
                milestones.append(milestone)
 
         data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'milestones':milestones,
-                'showmyticket': showmyticket, 'selected_milestone': selectedmilestone}
+                'show_my_ticket': show_my_ticket, 'selected_milestone': selected_milestone}
         return 'gantt.html', data, None
 
     def get_templates_dirs(self):

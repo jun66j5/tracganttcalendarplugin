@@ -8,7 +8,7 @@ setup(
         ganttcalendar.ticketcalendar = ganttcalendar.ticketcalendar
         ganttcalendar.ticketgantt = ganttcalendar.ticketgantt
     """,
-    package_data={'ganttcalendar': ['templates/*.html']},
+    package_data={'ganttcalendar': ['templates/*.html','htdocs/img/*']},
 )
 
 #        ticketcalendar = ticketcalendar

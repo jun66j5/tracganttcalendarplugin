@@ -5,7 +5,6 @@
   <xi:include href="macros.html" />
 <head>
 <style>
-<!--
 table.list {
     width:100%;
     border-collapse: collapse;
@@ -64,15 +63,13 @@ div.ticket:hover span.tip{
   border:1px solid #555;
   background-color: #ffe;
   font-size: 8pt;
-  z-index: 1;
-  top: 10px;
-  left: 10px;
-  width: 160px;
+  z-index: 100;
 }
+
 
 .ticket_late { background:pink url(../images/ticket_late.png); border: 1px solid red; }
 .ticket_done { background:lightgreen url(../images/ticket_done.png); border: 1px solid green; }  
-.ticket_todo { background:lightgray url(../images/ticket_todo.png); border: 1px solid gray; }
+.ticket_todo { background:lightgrey url(../images/ticket_todo.png); border: 1px solid gray; }
 
 .ticket {
   position: absolute;
@@ -117,7 +114,7 @@ div.ticket:hover span.tip{
   overflow: hidden;
 }
 
--->
+/* body { behavior:url("${href.chrome('tc/csshover2.htc')}"); } */
 </style>
 </head>
 <body>
@@ -225,7 +222,7 @@ div.ticket:hover span.tip{
 ?>
    <div style="top: ${offset*ti+60}px; left: 92px; width: 100px;" class="ticket" >
       <span class="tip">
-        ${ticket['type']}#${ticket['id']}: ${ticket['summary']}<br />
+        <pre>${ticket['type']}#${ticket['id']}: ${ticket['summary']}</pre>
         <strong>担当者</strong>: ${ticket['owner']}<br />
         <strong>開始日</strong>: ${ticket['due_assign']}<br />
         <strong>終了日</strong>: ${ticket['due_close']}<br />

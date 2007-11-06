@@ -5,7 +5,6 @@
   <xi:include href="macros.html" />
 <head>
 <style>
-<!--
 table.list {
     width:100%;
     border-collapse: collapse;
@@ -63,11 +62,11 @@ div.ticket:hover span.tip{
   position:absolute;
   border:1px solid #555;
   background-color: #ffe;
-  padding: 4px;
-  font-size: 1.2em;
+  font-size: 8pt;
+  z-index: 100;
 }
 
--->
+body { behavior:url("${href.chrome('tc/csshover2.htc')}"); }
 </style>
 </head>
 <body>
@@ -156,19 +155,22 @@ div.ticket:hover span.tip{
      img_url = href.chrome('tc/img/arrow_bw.png')
 ?>
 
-      <div py:if="img_url!= None" class="ticket">
-      <img src="$img_url" alt="+" />
-      <s py:strip="t['status']!='closed'"><a href="${req.href.ticket()}/${t['id']}">${t['type']}#${t['id']}:${t['summary']}</a></s>
-      <span class="tip">
-        ${t['type']}#${t['id']}: ${t['summary']}<br />
-<br /> 
-        <strong>担当者</strong>: ${t['owner']}<br />
-        <strong>開始日</strong>: ${t['due_assign']}<br />
-        <strong>終了日</strong>: ${t['due_close']}<br />
-        <strong>詳細</strong>: <pre>${t['description']}</pre>
-      </span>
+       <div py:if="img_url!= None" class="ticket">
+         <img src="$img_url" alt="+" />
+         <s py:strip="t['status']!='closed'">
+           <a href="${req.href.ticket()}/${t['id']}">${t['type']}#${t['id']}:${t['summary']}</a>
+         </s>
+         <span class="tip">
+           ${t['type']}#${t['id']}: ${t['summary']}<br />
+           <br /> 
+           <strong>担当者</strong>: ${t['owner']}<br />
+           <strong>開始日</strong>: ${t['due_assign']}<br />
+           <strong>終了日</strong>: ${t['due_close']}<br />
+          <strong>詳細</strong>: <pre>${t['description']}</pre>
+         </span>
        </div>
-    </span>
+     </span>
+
      <span py:for="m in milestones" py:strip="True" >
         <div py:if="m['due']==mday" class="ticket">
         <s py:strip="m['completed']!=True"><a href="${req.href.milestone()}/${m['name']}"><img src="${href.chrome('tc/img/package.png')}" />${m['name']}</a></s>

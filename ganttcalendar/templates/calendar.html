@@ -157,12 +157,9 @@ body { behavior:url("${href.chrome('tc/csshover2.htc')}"); }
 
        <div py:if="img_url!= None" class="ticket">
          <img src="$img_url" alt="+" />
-         <s py:strip="t['status']!='closed'">
-           <a href="${req.href.ticket()}/${t['id']}">${t['type']}#${t['id']}:${t['summary']}</a>
-         </s>
+           <a href="${req.href.ticket()}/${t['id']}"><span class="type">${t['type']}</span><s py:strip="t['status']!='closed'">#${t['id']}:${t['summary']}</s></a>
          <span class="tip">
-           ${t['type']}#${t['id']}: ${t['summary']}<br />
-           <br /> 
+           <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
            <strong>担当者</strong>: ${t['owner']}<br />
            <strong>開始日</strong>: ${t['due_assign']}<br />
            <strong>終了日</strong>: ${t['due_close']}<br />

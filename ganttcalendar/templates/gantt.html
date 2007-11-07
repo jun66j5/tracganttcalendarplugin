@@ -63,6 +63,8 @@ div.ticket:hover span.tip{
   border:1px solid #555;
   background-color: #ffe;
   font-size: 8pt;
+  top: 12pt;
+  left:12pt;
   z-index: 100;
 }
 
@@ -222,7 +224,7 @@ div.ticket:hover span.tip{
 ?>
    <div style="top: ${offset*ti+60}px; left: 92px; width: 100px;" class="ticket" >
       <span class="tip">
-        <pre>${ticket['type']}#${ticket['id']}: ${ticket['summary']}</pre>
+        <pre><span class="type">${ticket['type']}</span>#${ticket['id']}: ${ticket['summary']}</pre>
         <strong>担当者</strong>: ${ticket['owner']}<br />
         <strong>開始日</strong>: ${ticket['due_assign']}<br />
         <strong>終了日</strong>: ${ticket['due_close']}<br />
@@ -302,8 +304,12 @@ div.ticket:hover span.tip{
   if cls < 0 and not (assign != -1):
     cls = 0
   if (cls - assign + assign) > term:
-     cls = term -1
+     cls = term - 1
   todow = (cls-assign+1)*dw
+
+  if assign*dw+todow > term*dw:
+     todow = (term-assign)*dw
+
   latew = 0
   if base > assign:
      latew = (base-assign+1)*dw
@@ -315,6 +321,8 @@ div.ticket:hover span.tip{
      complete = 0
   else:
      complete = int(complete)*barw/100-(gap)*dw
+     if assign*dw+complete > term*dw:
+        complete = (term-assign)*dw
 ?>
    <!-- draw chart -->
    <div py:if="assign!=-1 and todow>0" style="top: ${offset*ti+60}px; left: ${assign*dw}px; width: ${todow}px;" class="ticket ticket_todo"></div>

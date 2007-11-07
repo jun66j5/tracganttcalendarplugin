@@ -129,6 +129,7 @@ class TicketGanttChartPlugin(Component):
         cursor.execute(sql)
 
         milestones = [""]
+
         for name, due, completed, description in cursor:
            if due!=0:
                due_time = time.gmtime(due)

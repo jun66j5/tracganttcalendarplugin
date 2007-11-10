@@ -90,6 +90,11 @@ div.ticket:hover span.tip{
   position: absolute; 
 }
 
+.milestone {
+  border-left: 2px solid red;
+  position: absolute; 
+}
+
 .line {
   border-left: 1px solid gray;
   border-top: 1px solid gray;
@@ -333,7 +338,15 @@ div.ticket:hover span.tip{
 ?>
 </span>
        </small>
+       <!-- draw baseline -->
        <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
+<?python
+  m_line = -1
+  for ml in milestones:
+     if ml != "" and ml['name'] == selected_milestone:
+         m_line = (ml['due']-first).days
+?>
+       <div py:if="m_line != -1 and m_line+1 &lt; term" class="milestone" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(m_line+2)*dw}px; width: 10px;">&nbsp;</div>
        </div>
     </td>
   </tr>

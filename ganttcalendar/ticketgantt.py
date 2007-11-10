@@ -6,6 +6,7 @@ from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
 from trac.context import Context
+from trac.util.datefmt import to_datetime, utc
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -132,8 +133,8 @@ class TicketGanttChartPlugin(Component):
 
         for name, due, completed, description in cursor:
            if due!=0:
-               due_time = time.gmtime(due)
-               due_date = date(due_time[0],due_time[1],due_time[2])
+               due_time = to_datetime(due, utc)
+               due_date = date(due_time.year, due_time.month, due_time.day)
                milestone = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
                milestones.append(milestone)
 

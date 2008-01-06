@@ -134,6 +134,28 @@ div.ticket:hover span.tip{
 <table class="list">
   <tr>
     <td>
+        <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
+    </td>
+    <td align="center">
+        <select name="year">
+             <option py:for="y in [2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]"
+                     value="$y" 
+                     selected="${y==current.year or None}">$y</option>
+        </select>
+        年
+        <select name="month">
+             <option py:for="m in [1,2,3,4,5,6,7,8,9,10,11,12]"
+                     value="$m" selected="${m==current.month or None}">$m</option>
+        </select>
+        月　
+　　　　基準日<input type="text" name="baseday" value="${baseday.year}/${baseday.month}/${baseday.day}" length="10"/>
+    </td>
+    <td align="right">
+       <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
+    </td>
+  </tr>
+  <tr>
+    <td>
     </td>
     <td>
         <table>
@@ -155,7 +177,11 @@ ${_(sorted_field)}
            </td>
            <td width="150px">
 　      <select name="selected_item">
-             <option py:for="m in items" value="${m.name}" selected="${selected_item==m.name or None}">${m.name}</option>
+<!--<option py:for="i in items" value="${i.name}" selected="${selected_item==i.name or None}">${i.name}</option>-->
+             <span py:strip="True" py:for="i in items">
+                <option selected="${selected_item==i.name or None}" 
+                        value="${i.name}">${i.name}</option>
+             </span>
         </select>
            </td>
            <td>
@@ -166,29 +192,6 @@ ${_(sorted_field)}
     </td>
     <td align="right" valign="bottom">
 　　    <input type="submit" value="更新" />
-    </td>
-  </tr>
-  <tr>
-       
-    <td>
-        <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
-    </td>
-    <td align="center">
-        <select name="year">
-             <option py:for="y in [2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]"
-                     value="$y" 
-                     selected="${y==current.year or None}">$y</option>
-        </select>
-        年
-        <select name="month">
-             <option py:for="m in [1,2,3,4,5,6,7,8,9,10,11,12]"
-                     value="$m" selected="${m==current.month or None}">$m</option>
-        </select>
-        月　
-　　　　基準日<input type="text" name="baseday" value="${baseday.year}/${baseday.month}/${baseday.day}" length="10"/>
-    </td>
-    <td align="right">
-       <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
     </td>
   </tr>
 </table>
@@ -373,9 +376,10 @@ ${_(sorted_field)}
        <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
 <?python
   m_line = -1
-  for ml in items:
-     if ml != "" and ml['name'] == selected_item:
-         m_line = (ml['due']-first).days
+  if selected_item=='milestone':
+      for ml in items:
+          if ml != "" and ml['name'] == selected_item:
+              m_line = (ml['due']-first).days
 ?>
        <div py:if="m_line != -1 and m_line+1 &lt; term" class="milestone" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(m_line+2)*dw}px; width: 10px;">&nbsp;</div>
        </div>

@@ -96,7 +96,7 @@ class TicketGanttChartPlugin(Component):
                           "%s ORDER by %s , a.value ") % (sorted_field ,condition, sorted_field)
         else:
            if show_my_ticket=="on" or show_closed_ticket!="on":
-               condition = self.generate_where(show_my_ticket,
+               condition = "AND " + self.generate_where(show_my_ticket,
                                                show_closed_ticket,
                                                req.authname)
            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
@@ -124,23 +124,34 @@ class TicketGanttChartPlugin(Component):
               continue
            if item == None or item == "":
               item = "*"
+           if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
+              complete = complete[0:len(complete)-1]
            ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status, 'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, sorted_field: item}
            self.log.debug(ticket)
            tickets.append(ticket)
 
         # get roadmap
-        sql = ("SELECT name from %s") % (sorted_field)
-        self.log.debug(sql)
-        cursor.execute(sql)
-
         items = [""]
+        if selected_item=='milestone':
+            sql = ("SELECT name, due, completed, description from MILESTONE")
+            self.log.debug(sql)
+            cursor.execute(sql)
 
-        for name in cursor:
-           items.append({'name':name})
-
+            for name, due, completed, description in cursor:
+                if due!=0:
+                    due_time = to_datetime(due, utc)
+                    due_date = date(due_time.year, due_time.month, due_time.day)
+                    item = {'name':name[0], 'due':due_date, 'completed':completed != 0,'description':description}
+                    items.append(milestone)
+        else:
+            sql = ("SELECT name from %s") % (sorted_field)
+            self.log.debug(sql)
+            cursor.execute(sql)
+            for name in cursor:
+                items.append({'name':name[0]})
 
         data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'items':items,
-                'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_milestone': selected_item, 'sorted_field': sorted_field}
+                'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_item': selected_item, 'sorted_field': sorted_field}
         return 'gantt.html', data, None
 
     def generate_where(self,show_my,show_closed,owner):

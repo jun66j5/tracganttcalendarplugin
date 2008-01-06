@@ -136,12 +136,35 @@ div.ticket:hover span.tip{
     <td>
     </td>
     <td>
-　      マイルストーン<select name="selected_milestone">
-             <option py:for="m in milestones" value="${m.name}" selected="${selected_milestone==m.name or None}">${m.name}</option>
+        <table>
+         <tr>
+           <td>ソートするフィールド</td>
+           <td width="150px">
+　      <select name="sorted_field">
+             <option value="component" selected="${sorted_field=='component' or None}">component</option>
+             <option value="milestone" selected="${sorted_field=='milestone' or None}">milestone</option>
         </select>
+           </td>
+           <td>
 　　    <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
+           </td>
+         </tr>
+         <tr>
+           <td>
+${_(sorted_field)}
+           </td>
+           <td width="150px">
+　      <select name="selected_item">
+             <option py:for="m in items" value="${m.name}" selected="${selected_item==m.name or None}">${m.name}</option>
+        </select>
+           </td>
+           <td>
+　　    <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />closeしたチケットを表示
+           </td>
+         </tr>
+        </table>
     </td>
-    <td align="right">
+    <td align="right" valign="bottom">
 　　    <input type="submit" value="更新" />
     </td>
   </tr>
@@ -169,8 +192,9 @@ div.ticket:hover span.tip{
     </td>
   </tr>
 </table>
+<!--
 </form>
-
+-->
 <!-- gantt -->
 <?python
   dw = 12 # day width
@@ -203,13 +227,15 @@ div.ticket:hover span.tip{
      <!-- line right of owner -->
      <div style="position: relative; top: 0px; left: 0px; width: 300px; height:${numticket*ti+70}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
 
-     <div style="top:0px; left: 0px; width: 89px; height: 44px" class="gantt_hdr">マイルストーン</div>
+     <div style="top:0px; left: 0px; width: 89px; height: 44px" class="gantt_hdr">
+        ${_(sorted_field)}
+</div>
      <div style="top:0px; left: 89px; width: 104px; height: 44px" class="gantt_hdr">チケット</div>
      <div style="top:0px; left: 193px; width: 107px; height: 44px" class="gantt_hdr">担当者</div>
 
 <?python
  offset = 0
- milestone = None
+ item = None
 ?>
 <span py:for="ticket in tickets">
 <?python
@@ -222,10 +248,15 @@ div.ticket:hover span.tip{
   barw = (cls-assign+1)*dw
 ?>
    <!-- draw ticket label -->
-   <div py:if="ticket['milestone']!=milestone" style="top: ${offset*ti+60}px; left: 4px; width: 92px" class="ticket" ><a py:strip="ticket['milestone']=='*'" href="${req.href.milestone()}/${ticket['milestone']}">${ticket['milestone']}</a></div>
+   <div py:if="ticket[sorted_field]!=item" style="top: ${offset*ti+60}px; left: 4px; width: 92px" class="ticket" >
+   <!--
+   <a py:strip="ticket[field]=='*'" href="${req.href.milestone()}/${ticket['milestone']}">${ticket['milestone']}</a>
+   -->
+   ${ticket[sorted_field]}
+   </div>
 
 <?python
-  milestone = ticket['milestone']
+  item = ticket[sorted_field]
 ?>
    <div style="top: ${offset*ti+60}px; left: 92px; width: 100px;" class="ticket" >
       <span class="tip">
@@ -342,8 +373,8 @@ div.ticket:hover span.tip{
        <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
 <?python
   m_line = -1
-  for ml in milestones:
-     if ml != "" and ml['name'] == selected_milestone:
+  for ml in items:
+     if ml != "" and ml['name'] == selected_item:
          m_line = (ml['due']-first).days
 ?>
        <div py:if="m_line != -1 and m_line+1 &lt; term" class="milestone" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(m_line+2)*dw}px; width: 10px;">&nbsp;</div>
@@ -351,7 +382,7 @@ div.ticket:hover span.tip{
     </td>
   </tr>
 </table>
-
+</form>
 <!-- gantt -->
 </body>
 </html>

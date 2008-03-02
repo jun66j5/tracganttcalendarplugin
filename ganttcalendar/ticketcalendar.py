@@ -6,7 +6,6 @@ from genshi.builder import tag
 from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
-from trac.context import Context
 from trac.util.datefmt import to_datetime, utc
 
 class TicketCalendarPlugin(Component):

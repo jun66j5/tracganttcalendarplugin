@@ -16,8 +16,9 @@ class TicketCalendarPlugin(Component):
         return 'ticketcalendar'
     
     def get_navigation_items(self, req):
-        yield ('mainnav', 'ticketcalendar',
-               tag.a('Calendar', href=req.href.ticketcalendar()))
+        if req.perm.has_permission('TICKET_VIEW'):
+             yield ('mainnav', 'ticketcalendar',
+                    tag.a('カレンダー', href=req.href.ticketcalendar()))
     
     # IRequestHandler methods
     def match_request(self, req):

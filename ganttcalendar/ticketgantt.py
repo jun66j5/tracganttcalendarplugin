@@ -15,8 +15,9 @@ class TicketGanttChartPlugin(Component):
         return 'ticketgantt'
     
     def get_navigation_items(self, req):
-        yield ('mainnav', 'ticketgantt',
-               tag.a('Gantt', href=req.href.ticketgantt()))
+        if req.perm.has_permission('TICKET_VIEW'):
+            yield ('mainnav', 'ticketgantt',
+                   tag.a('ガントチャート', href=req.href.ticketgantt()))
     
     # IRequestHandler methods
     def match_request(self, req):

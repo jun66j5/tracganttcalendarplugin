@@ -1,3 +1,4 @@
+#encoding=utf-8
 import re, calendar, time
 from datetime import datetime, date, timedelta
 from genshi.builder import tag
@@ -16,32 +17,31 @@ class TicketGanttChartPlugin(Component):
     
     def get_navigation_items(self, req):
         if req.perm.has_permission('TICKET_VIEW'):
-            yield ('mainnav', 'ticketgantt',
-                   tag.a('ガントチャート', href=req.href.ticketgantt()))
-    
+            yield ('mainnav', 'ticketgantt',tag.a(u'ガントチャート', href=req.href.ticketgantt()))
+
     # IRequestHandler methods
     def match_request(self, req):
         return re.match(r'/ticketgantt(?:_trac)?(?:/.*)?$', req.path_info)
 
     def calendarRange(self, y, m):
-       w,mdays = calendar.monthrange(y,m)
-       w = (w + 1) % 7
-       firstDay = date(y,m,1)-timedelta(days=w)
-       
-       lastDay = date(y,m,mdays)
-       w = (lastDay.weekday()+1)%7
-       lastDay = lastDay + timedelta(days=(6-w))
-       return firstDay, lastDay
+        w,mdays = calendar.monthrange(y,m)
+        w = (w + 1) % 7
+        firstDay = date(y,m,1)-timedelta(days=w)
+
+        lastDay = date(y,m,mdays)
+        w = (lastDay.weekday()+1)%7
+        lastDay = lastDay + timedelta(days=(6-w))
+        return firstDay, lastDay
 
     def dateToString(self, dt):
-       m = dt.month
-       if m < 10:
-          m = '0'+str(m)
-       d = dt.day
-       if d < 10:
-          d = '0'+str(d)
-       return str(dt.year)+"/"+str(m)+"/"+str(d)
-    
+        m = dt.month
+        if m < 10:
+            m = '0'+str(m)
+            d = dt.day
+        if d < 10:
+            d = '0'+str(d)
+        return str(dt.year)+"/"+str(m)+"/"+str(d)
+
     def process_request(self, req):
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
@@ -51,13 +51,13 @@ class TicketGanttChartPlugin(Component):
         show_closed_ticket = req.args.get('show_closed_ticket')
         sorted_field = req.args.get('sorted_field')
         if sorted_field == None:
-           sorted_field = 'component'
+            sorted_field = 'component'
 
         if baseday != None:
-           r = re.match(r'^(\d+)/(\d+)/(\d+)$', baseday)
-           baseday = date(int(r.group(1)), int(r.group(2)), int(r.group(3)))
+            r = re.match(r'^(\d+)/(\d+)/(\d+)$', baseday)
+            baseday = date(int(r.group(1)), int(r.group(2)), int(r.group(3)))
         else:
-           baseday = date.today()
+            baseday = date.today()
 
         cday = date.today()
         if not (not ymonth or not yyear):
@@ -70,7 +70,7 @@ class TicketGanttChartPlugin(Component):
             ny = ny + 1
             nm = 1
         nmonth = datetime(ny,nm,1)
-        
+
         # cal previous month
         pm = cday.month - 1
         py = cday.year
@@ -79,56 +79,56 @@ class TicketGanttChartPlugin(Component):
             pm = 12
         pmonth = date(py,pm,1)
         first,last = self.calendarRange(cday.year, cday.month)
-# process ticket
+        # process ticket
         db = self.env.get_db_cnx()
         cursor = db.cursor();
         sql = ""
         condition=""
         if selected_item == None or selected_item == "":
-           if show_my_ticket=="on" or show_closed_ticket!="on":
-               condition = "WHERE " + self.generate_where(show_my_ticket,
-                                                   show_closed_ticket,
-                                                   req.authname)
-           sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
-                          "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
-                          "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                          "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                          "%s ORDER by %s , a.value ") % (sorted_field ,condition, sorted_field)
+            if show_my_ticket=="on" or show_closed_ticket!="on":
+                condition = "WHERE " + self.generate_where(show_my_ticket,
+                                                    show_closed_ticket,
+                                                    req.authname)
+            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
+                        "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
+                        "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
+                        "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
+                        "%s ORDER by %s , a.value ") % (sorted_field ,condition, sorted_field)
         else:
-           if show_my_ticket=="on" or show_closed_ticket!="on":
-               condition = "AND " + self.generate_where(show_my_ticket,
-                                               show_closed_ticket,
-                                               req.authname)
-           sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
-                          "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
-                          "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                          "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                          "WHERE %s = '%s' %s ORDER by %s , a.value "
-                  ) % (sorted_field, sorted_field, selected_item, condition, sorted_field)
+            if show_my_ticket=="on" or show_closed_ticket!="on":
+                condition = "AND " + self.generate_where(show_my_ticket,
+                                                show_closed_ticket,
+                                                req.authname)
+            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
+                        "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
+                        "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
+                        "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
+                        "WHERE %s = '%s' %s ORDER by %s , a.value "
+                ) % (sorted_field, sorted_field, selected_item, condition, sorted_field)
         self.log.debug(sql)
         cursor.execute(sql)
 
         tickets=[]
         for id, type, summary, owner, description, status, due_assign, due_close, complete, item in cursor:
-           due_assign_date = None
-           due_close_date = None
-           try:
-              t = time.strptime(due_assign,"%Y/%m/%d")
-              due_assign_date = date(t[0],t[1],t[2])
-           except ValueError, TypeError:
-              continue
-           try:
-              t = time.strptime(due_close,"%Y/%m/%d")
-              due_close_date = date(t[0],t[1],t[2])
-           except ValueError, TypeError:
-              continue
-           if item == None or item == "":
-              item = "*"
-           if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
-              complete = complete[0:len(complete)-1]
-           ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status, 'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, sorted_field: item}
-           self.log.debug(ticket)
-           tickets.append(ticket)
+            due_assign_date = None
+            due_close_date = None
+            try:
+                t = time.strptime(due_assign,"%Y/%m/%d")
+                due_assign_date = date(t[0],t[1],t[2])
+            except ( ValueError, TypeError):
+                continue
+            try:
+                t = time.strptime(due_close,"%Y/%m/%d")
+                due_close_date = date(t[0],t[1],t[2])
+            except ( ValueError, TypeError):
+                continue
+            if item == None or item == "":
+                item = "*"
+            if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
+                complete = complete[0:len(complete)-1]
+            ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status, 'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, sorted_field: item}
+            self.log.debug(ticket)
+            tickets.append(ticket)
 
         # get roadmap
         items = [""]

@@ -71,6 +71,7 @@
   </head>
   <body>
 <?python
+from trac.util.datefmt import format_date, parse_date
 mday = first
 ?>
     <table border="1">
@@ -160,8 +161,8 @@ if t['due_close']==mday and t['due_assign']==mday:
                   <span class="tip">
                     <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
                     <strong>担当者</strong>: ${t['owner']}<br />
-                    <strong>開始日</strong>: ${t['due_assign']}<br />
-                    <strong>終了日</strong>: ${t['due_close']}<br />
+                    <strong>開始日</strong>: ${format_date(parse_date(t['due_assign'].isoformat()))}<br />
+                    <strong>終了日</strong>: ${format_date(parse_date(t['due_close'].isoformat()))}<br />
                     <strong>詳細</strong>: <pre>${t['description']}</pre>
                   </span>
                 </div>
@@ -172,7 +173,7 @@ if t['due_close']==mday and t['due_assign']==mday:
                   <s py:strip="m['completed']!=True"><a href="${req.href.milestone()}/${m['name']}"><img src="${href.chrome('tc/img/package.png')}" />${m['name']}</a></s>
                   <span class="tip">
                     ${m['name']}<br />
-                    <strong>期限</strong>: ${m['due']}<br />
+                    <strong>期限</strong>: ${format_date(parse_date(m['due'].isoformat()))}<br />
                     <strong>詳細</strong>: ${m['description']}<br />
                   </span>
                 </div>

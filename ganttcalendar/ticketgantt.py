@@ -6,7 +6,7 @@ from genshi.builder import tag
 from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
-from trac.util.datefmt import to_datetime, utc
+from trac.util.datefmt import to_datetime, utc, parse_date
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -33,15 +33,6 @@ class TicketGanttChartPlugin(Component):
         lastDay = lastDay + timedelta(days=(6-w))
         return firstDay, lastDay
 
-    def dateToString(self, dt):
-        m = dt.month
-        if m < 10:
-            m = '0'+str(m)
-            d = dt.day
-        if d < 10:
-            d = '0'+str(d)
-        return str(dt.year)+"/"+str(m)+"/"+str(d)
-
     def process_request(self, req):
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
@@ -54,8 +45,7 @@ class TicketGanttChartPlugin(Component):
             sorted_field = 'component'
 
         if baseday != None:
-            r = re.match(r'^(\d+)/(\d+)/(\d+)$', baseday)
-            baseday = date(int(r.group(1)), int(r.group(2)), int(r.group(3)))
+            baseday = parse_date( baseday).date()
         else:
             baseday = date.today()
 
@@ -64,20 +54,10 @@ class TicketGanttChartPlugin(Component):
             cday = date(int(yyear),int(ymonth),1)
 
         # cal next month
-        nm = cday.month + 1
-        ny  = cday.year
-        if nm > 12:
-            ny = ny + 1
-            nm = 1
-        nmonth = datetime(ny,nm,1)
+        nmonth = cday.replace(day=1).__add__(timedelta(days=32)).replace(day=1)
 
         # cal previous month
-        pm = cday.month - 1
-        py = cday.year
-        if pm < 1:
-            py = py -1
-            pm = 12
-        pmonth = date(py,pm,1)
+        pmonth = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
         first,last = self.calendarRange(cday.year, cday.month)
         # process ticket
         db = self.env.get_db_cnx()
@@ -113,14 +93,12 @@ class TicketGanttChartPlugin(Component):
             due_assign_date = None
             due_close_date = None
             try:
-                t = time.strptime(due_assign,"%Y/%m/%d")
-                due_assign_date = date(t[0],t[1],t[2])
-            except ( ValueError, TypeError):
+                due_assign_date = parse_date(due_assign).date()
+            except ( TracError, ValueError, TypeError):
                 continue
             try:
-                t = time.strptime(due_close,"%Y/%m/%d")
-                due_close_date = date(t[0],t[1],t[2])
-            except ( ValueError, TypeError):
+                due_close_date = parse_date(due_close).date()
+            except ( TracError, ValueError, TypeError):
                 continue
             if item == None or item == "":
                 item = "*"
@@ -139,16 +117,15 @@ class TicketGanttChartPlugin(Component):
 
             for name, due, completed, description in cursor:
                 if due!=0:
-                    due_time = to_datetime(due, utc)
-                    due_date = date(due_time.year, due_time.month, due_time.day)
-                    item = {'name':name[0], 'due':due_date, 'completed':completed != 0,'description':description}
+                    due_time = to_datetime(due, utc).date()
+                    item = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
                     items.append(milestone)
         else:
             sql = ("SELECT name from %s") % (sorted_field)
             self.log.debug(sql)
             cursor.execute(sql)
-            for name in cursor:
-                items.append({'name':name[0]})
+            for name, in cursor:
+                items.append({'name':name})
 
         data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'items':items,
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_item': selected_item, 'sorted_field': sorted_field}

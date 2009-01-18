@@ -127,6 +127,8 @@
   <body>
 <?python
 import calendar
+from trac.util.datefmt import format_date, parse_date
+
 weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
 mday = first
 ?>
@@ -148,7 +150,7 @@ mday = first
                      value="$m" selected="${m==current.month or None}">$m</option>
             </select>
             月
-            基準日<input type="text" name="baseday" value="${baseday.year}/${baseday.month}/${baseday.day}" length="10"/>
+            基準日<input type="text" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
           </td>
           <td align="right">
             <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
@@ -199,8 +201,7 @@ mday = first
 <?python
 dw = 12 # day width
 ti = 25 # ticket interval
-cur = date(current.year,current.month, 1)
-first = date(current.year,current.month, 1)
+cur = first = current.replace(day=1)
 base = (baseday-first).days
 m = current.month
 wd = (cur.weekday() + 1) % 7
@@ -239,11 +240,11 @@ item = None
             <span py:for="ticket in tickets">
 <?python
 if cls != None and assign != None:
-     cls = (ticket['due_close']-first).days
-     assign = (ticket['due_assign']-first).days
+    cls = (ticket['due_close']-first).days
+    assign = (ticket['due_assign']-first).days
 else:
-     cls = -1
-     assign = -1
+    cls = -1
+    assign = -1
 barw = (cls-assign+1)*dw
 ?>
               <!-- draw ticket label -->
@@ -258,8 +259,8 @@ item = ticket[sorted_field]
                 <span class="tip">
                   <pre><span class="type">${ticket['type']}</span>#${ticket['id']}: ${ticket['summary']}</pre>
                   <strong>担当者</strong>: ${ticket['owner']}<br />
-                  <strong>開始日</strong>: ${ticket['due_assign']}<br />
-                  <strong>終了日</strong>: ${ticket['due_close']}<br />
+                  <strong>開始日</strong>: ${format_date(parse_date(ticket['due_assign'].isoformat()))}<br />
+                  <strong>終了日</strong>: ${format_date(parse_date(ticket['due_close'].isoformat()))}<br />
                   <strong>達成率</strong>: ${ticket['complete']}%<br />
                   <strong>詳細</strong>: <pre>${ticket['description']}</pre>
                 </span>

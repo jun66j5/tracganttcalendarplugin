@@ -11,50 +11,16 @@
         margin-bottom: 6px;
       }
 
-      table.with-cells td {
-        border: 1px solid #d7d7d7;
-      }
-
       table.list td {
         padding:2px;
-      }
-
-      table.list thead th {
-        text-align: center;
-        background: #eee;
-        border: 1px solid #d7d7d7;
-        color: #777;
-      }
-
-      table.list tbody th {
-        font-weight: bold;
-        background: #eed;
-        border: 1px solid #d7d7d7;
-        color: #777;
       }
 
       .tip {
         display: none; text-align:left;
       }
 
-      .ticket {
-        font-size: 9px;
-      }
-
-
-      .textright {
-        text-align:right;
-      }
-
       .active {
         background-color:#fff;
-      }
-      .holiday {
-        background-color: #f6f7f8;
-        color: red;
-      }
-      .today {
-        background-color: #ffe0e0;
       }
 
       div.ticket:hover span.tip{
@@ -69,20 +35,15 @@
       }
 
 
-      .ticket_late { background:pink url(../images/ticket_late.png); border: 1px solid red; }
-      .ticket_done { background:lightgreen url(../images/ticket_done.png); border: 1px solid green; }
-      .ticket_todo { background:lightgrey url(../images/ticket_todo.png); border: 1px solid gray; }
+      .ticket_late { background:pink; border: 1px solid red; }
+      .ticket_done { background:lightgreen; border: 1px solid green; }
+      .ticket_todo { background:lightgrey; border: 1px solid gray; }
 
       .ticket {
+        font-size: 9px;
         position: absolute;
         height:8px;
         color:black;
-      }
-
-      .title {
-        overflow: hidden;
-        position: absolute;
-        line-height: 1.2em;
       }
 
       .baseline {
@@ -101,13 +62,6 @@
         position: absolute;
       }
 
-      .gantt_tbl {
-        border-top: 1px solid gray;
-        border-bottom: 1px solid gray;
-        border-right: 1px solid gray;
-        border-left: 1px solid gray;
-      }
-
       .gantt_hdr {
         position:absolute;
         top:0;
@@ -120,8 +74,6 @@
         text-align: center;
         overflow: hidden;
       }
-
-      /* body { behavior:url("${href.chrome('tc/csshover2.htc')}"); } */
     </style>
   </head>
   <body>
@@ -131,7 +83,6 @@ from datetime import timedelta
 from trac.util.datefmt import format_date, parse_date
 
 weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
-mday = first
 ?>
     <form>
       <table class="list">
@@ -204,14 +155,7 @@ dw = 12 # day width
 ti = 25 # ticket interval
 cur = first = current.replace(day=1)
 base = (baseday-first).days
-m = current.month
-wd = (cur.weekday() + 1) % 7
-m1 = calendar.monthrange(current.year, current.month)[1];
-tmp = current+timedelta(days=m1)
-m2 = calendar.monthrange(tmp.year, tmp.month)[1]
-tmp = current+timedelta(days=(m1+m2))
-m3 = calendar.monthrange(tmp.year, tmp.month)[1]
-term = m1 + m2 + m3
+term = (first.__add__(timedelta(100)).replace(day=1)-first).days #3 month
 offset = 0
 numticket = len(tickets)
 ?>
@@ -239,20 +183,10 @@ offset = 0
 item = None
 ?>
             <span py:for="ticket in tickets">
-<?python
-if cls != None and assign != None:
-    cls = (ticket['due_close']-first).days
-    assign = (ticket['due_assign']-first).days
-else:
-    cls = -1
-    assign = -1
-barw = (cls-assign+1)*dw
-?>
               <!-- draw ticket label -->
               <div py:if="ticket[sorted_field]!=item" style="top: ${offset*ti+60}px; left: 4px; width: 92px" class="ticket" >
                 ${ticket[sorted_field]}
               </div>
-
 <?python
 item = ticket[sorted_field]
 ?>
@@ -365,14 +299,6 @@ offset=offset+1
             </small>
             <!-- draw baseline -->
             <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
-<?python
-m_line = -1
-if selected_item=='milestone':
-    for ml in items:
-        if ml != "" and ml['name'] == selected_item:
-              m_line = (ml['due']-first).days
-?>
-            <div py:if="m_line != -1 and m_line+1 &lt; term" class="milestone" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(m_line+2)*dw}px; width: 10px;">&nbsp;</div>
           </div>
         </td>
       </tr>

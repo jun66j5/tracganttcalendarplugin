@@ -23,16 +23,6 @@ class TicketGanttChartPlugin(Component):
     def match_request(self, req):
         return re.match(r'/ticketgantt(?:_trac)?(?:/.*)?$', req.path_info)
 
-    def calendarRange(self, y, m):
-        w,mdays = calendar.monthrange(y,m)
-        w = (w + 1) % 7
-        firstDay = date(y,m,1)-timedelta(days=w)
-
-        lastDay = date(y,m,mdays)
-        w = (lastDay.weekday()+1)%7
-        lastDay = lastDay + timedelta(days=(6-w))
-        return firstDay, lastDay
-
     def process_request(self, req):
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
@@ -58,7 +48,6 @@ class TicketGanttChartPlugin(Component):
 
         # cal previous month
         pmonth = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
-        first,last = self.calendarRange(cday.year, cday.month)
         # process ticket
         db = self.env.get_db_cnx()
         cursor = db.cursor();
@@ -109,25 +98,14 @@ class TicketGanttChartPlugin(Component):
             tickets.append(ticket)
 
         # get roadmap
-        items = [""]
-        if selected_item=='milestone':
-            sql = ("SELECT name, due, completed, description from MILESTONE")
-            self.log.debug(sql)
-            cursor.execute(sql)
+        items = [{}]
+        sql = ("SELECT name from %s") % (sorted_field)
+        self.log.debug(sql)
+        cursor.execute(sql)
+        for name, in cursor:
+            items.append({'name':name})
 
-            for name, due, completed, description in cursor:
-                if due!=0:
-                    due_time = to_datetime(due, utc).date()
-                    item = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
-                    items.append(milestone)
-        else:
-            sql = ("SELECT name from %s") % (sorted_field)
-            self.log.debug(sql)
-            cursor.execute(sql)
-            for name, in cursor:
-                items.append({'name':name})
-
-        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'items':items,
+        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'tickets':tickets, 'items':items,
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_item': selected_item, 'sorted_field': sorted_field}
         return 'gantt.html', data, None
 

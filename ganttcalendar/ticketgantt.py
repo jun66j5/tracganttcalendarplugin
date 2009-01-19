@@ -6,7 +6,7 @@ from genshi.builder import tag
 from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
-from trac.util.datefmt import to_datetime, utc, parse_date
+from trac.util.datefmt import to_datetime, parse_date
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -27,7 +27,8 @@ class TicketGanttChartPlugin(Component):
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
         baseday = req.args.get('baseday')
-        selected_item = req.args.get('selected_item')
+        selected_milestone = req.args.get('selected_milestone')
+        selected_component = req.args.get('selected_component')
         show_my_ticket = req.args.get('show_my_ticket')
         show_closed_ticket = req.args.get('show_closed_ticket')
         sorted_field = req.args.get('sorted_field')
@@ -53,32 +54,38 @@ class TicketGanttChartPlugin(Component):
         cursor = db.cursor();
         sql = ""
         condition=""
-        if selected_item == None or selected_item == "":
-            if show_my_ticket=="on" or show_closed_ticket!="on":
-                condition = "WHERE " + self.generate_where(show_my_ticket,
-                                                    show_closed_ticket,
-                                                    req.authname)
-            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
-                        "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
-                        "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                        "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                        "%s ORDER by %s , a.value ") % (sorted_field ,condition, sorted_field)
-        else:
-            if show_my_ticket=="on" or show_closed_ticket!="on":
-                condition = "AND " + self.generate_where(show_my_ticket,
-                                                show_closed_ticket,
-                                                req.authname)
-            sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, %s from ticket t "
-                        "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
-                        "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                        "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                        "WHERE %s = '%s' %s ORDER by %s , a.value "
-                ) % (sorted_field, sorted_field, selected_item, condition, sorted_field)
+        if show_my_ticket == 'on':
+            if condition != "":
+                condition += " AND "
+            condition += "owner ='" + req.authname + "'"
+        if show_closed_ticket != 'on':
+            if condition != "":
+                condition += " AND "
+            condition += "status <> 'closed'"
+        if selected_milestone != None and selected_milestone !="":
+            if condition != "":
+                condition += " AND "
+            condition += "milestone ='" + selected_milestone +"'"
+        if selected_component != None and selected_component !="":
+            if condition != "":
+                condition += " AND "
+            condition += "component ='" + selected_component +"'"
+
+        if condition != "":
+            condition = "WHERE " + condition + " "
+
+        sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, milestone, component "
+                "FROM ticket t "
+                "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
+                "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
+                "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
+                "%sORDER by %s , a.value ") % (condition, sorted_field)
+
         self.log.debug(sql)
         cursor.execute(sql)
 
         tickets=[]
-        for id, type, summary, owner, description, status, due_assign, due_close, complete, item in cursor:
+        for id, type, summary, owner, description, status, due_assign, due_close, complete, milestone, component in cursor:
             due_assign_date = None
             due_close_date = None
             try:
@@ -89,37 +96,42 @@ class TicketGanttChartPlugin(Component):
                 due_close_date = parse_date(due_close).date()
             except ( TracError, ValueError, TypeError):
                 continue
-            if item == None or item == "":
-                item = "*"
             if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
                 complete = complete[0:len(complete)-1]
-            ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status, 'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, sorted_field: item}
+            if milestone == None or milestone == "":
+                milestone = "*"
+            if component == None or component == "":
+                component = "*"
+            ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status,
+                    'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, 
+                    'milestone': milestone,'component': component}
             self.log.debug(ticket)
             tickets.append(ticket)
 
-        # get roadmap
-        items = [{}]
-        sql = ("SELECT name from %s") % (sorted_field)
+        # milestones
+        milestones = [{}]
+        sql = ("SELECT name, due, completed, description FROM milestone")
+        self.log.debug(sql)
+        cursor.execute(sql)
+        for name, due, completed, description in cursor:
+            due_date = to_datetime(due, req.tz).date()
+            item = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
+            if due==0:
+                del item['due']
+            milestones.append(item)
+        # componet
+        components = [{}]
+        sql = ("SELECT name FROM component")
         self.log.debug(sql)
         cursor.execute(sql)
         for name, in cursor:
-            items.append({'name':name})
+            components.append({'name':name})
 
-        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'tickets':tickets, 'items':items,
-                'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_item': selected_item, 'sorted_field': sorted_field}
+        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'tickets':tickets,
+                'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field,
+                'milestones':milestones,'components':components,
+                'selected_milestone':selected_milestone,'selected_component': selected_component}
         return 'gantt.html', data, None
-
-    def generate_where(self,show_my,show_closed,owner):
-        sql=""
-        if show_my=="on":
-            sql = sql + "owner = '" + owner + "'"
-            if show_closed!="on":
-                sql = sql + " AND status <> 'closed'"
-        else:
-            if show_closed!="on":
-                sql = sql + "status <> 'closed'"
-        self.log.debug("generated sql: "+sql)
-        return sql
 
     def get_templates_dirs(self):
         from pkg_resources import resource_filename

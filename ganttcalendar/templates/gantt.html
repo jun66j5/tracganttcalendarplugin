@@ -52,7 +52,7 @@
       }
 
       .milestone {
-        border-left: 2px solid red;
+        border-right: 2px solid red;
         position: absolute;
       }
 
@@ -88,6 +88,38 @@ weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
       <table class="list">
         <tr>
           <td>
+          </td>
+          <td>
+            基準日<input type="text" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
+            ソートするフィールド
+            <select name="sorted_field">
+              <option value="component" selected="${sorted_field=='component' or None}">component</option>
+              <option value="milestone" selected="${sorted_field=='milestone' or None}">milestone</option>
+            </select><br/>
+            <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
+            <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />closeしたチケットを表示<br/>
+            絞込みをします
+            マイルストーン = 
+            <select name="selected_milestone">
+            <py:for each="i in milestones" py:strip="True" >
+              <option selected="${selected_milestone==i.name or None}" value="${i.name}">${i.name}</option>
+            </py:for>
+            </select>
+            AND 
+            コンポーネント =
+            <select name="selected_component">
+            <py:for each="i in components" py:strip="True" >
+                <option selected="${selected_component==i.name or None}" value="${i.name}">${i.name}</option>
+            </py:for>
+            </select>
+
+          </td>
+          <td align="right" valign="bottom">
+            <input type="submit" value="更新" />
+          </td>
+        </tr>
+        <tr>
+          <td>
             <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
           </td>
           <td align="center">
@@ -102,49 +134,9 @@ weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
                      value="$m" selected="${m==current.month or None}">$m</option>
             </select>
             月
-            基準日<input type="text" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
           </td>
           <td align="right">
             <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
-          </td>
-        </tr>
-        <tr>
-          <td>
-          </td>
-          <td>
-            <table>
-              <tr>
-                <td>ソートするフィールド</td>
-                <td width="150px">
-                  <select name="sorted_field">
-                    <option value="component" selected="${sorted_field=='component' or None}">component</option>
-                    <option value="milestone" selected="${sorted_field=='milestone' or None}">milestone</option>
-                  </select>
-                </td>
-                <td>
-                  <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  ${_(sorted_field)}
-                </td>
-                <td width="150px">
-                  <select name="selected_item">
-                    <span py:strip="True" py:for="i in items">
-                      <option selected="${selected_item==i.name or None}"
-                          value="${i.name}">${i.name}</option>
-                    </span>
-                  </select>
-                </td>
-                <td>
-                  <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />closeしたチケットを表示
-                </td>
-              </tr>
-            </table>
-          </td>
-          <td align="right" valign="bottom">
-            <input type="submit" value="更新" />
           </td>
         </tr>
       </table>
@@ -161,16 +153,16 @@ numticket = len(tickets)
 ?>
 
     <table style="width: 100%;">
-      <tr style="height: ${numticket*ti+110}px;">
+      <tr style="height: ${numticket*ti+85}px;">
         <td style="width: 300px;" valign="top">
           <!-- line left of milestone -->
-          <div style="overflow: none; position: relative; height: ${numticket*ti+110}px;">
+          <div style="overflow: none; position: relative; height: ${numticket*ti+85}px;">
             <!-- line between milestone and ticket -->
-            <div style="position: absolute; top: 0px; left: 0px; width: 88px; height:${numticket*ti+70}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
+            <div style="position: absolute; top: 0px; left: 0px; width: 88px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
             <!-- line between ticket and owner -->
-            <div style="position: absolute; top: 0px; left: 0px; width: 192px; height:${numticket*ti+70}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
+            <div style="position: absolute; top: 0px; left: 0px; width: 192px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
             <!-- line right of owner -->
-            <div style="position: relative; top: 0px; left: 0px; width: 300px; height:${numticket*ti+70}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
+            <div style="position: relative; top: 0px; left: 0px; width: 300px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
 
             <div style="top:0px; left: 0px; width: 89px; height: 44px" class="gantt_hdr">
               ${_(sorted_field)}
@@ -184,13 +176,13 @@ item = None
 ?>
             <span py:for="ticket in tickets">
               <!-- draw ticket label -->
-              <div py:if="ticket[sorted_field]!=item" style="top: ${offset*ti+60}px; left: 4px; width: 92px" class="ticket" >
+              <div py:if="ticket[sorted_field]!=item" style="top: ${offset*ti+46}px; left: 4px; width: 92px" class="ticket" >
                 ${ticket[sorted_field]}
               </div>
 <?python
 item = ticket[sorted_field]
 ?>
-              <div style="top: ${offset*ti+60}px; left: 92px; width: 100px;" class="ticket" >
+              <div style="top: ${offset*ti+46}px; left: 92px; width: 100px;" class="ticket" >
                 <span class="tip">
                   <pre><span class="type">${ticket['type']}</span>#${ticket['id']}: ${ticket['summary']}</pre>
                   <strong>担当者</strong>: ${ticket['owner']}<br />
@@ -201,7 +193,7 @@ item = ticket[sorted_field]
                 </span>
                 <a href="${req.href.ticket()}/${ticket['id']}">#${ticket['id']}:${ticket['summary'][0:10]}</a>
               </div>
-              <div style="top: ${offset*ti+60}px; left: 196px;" class="ticket" >
+              <div style="top: ${offset*ti+46}px; left: 196px;" class="ticket" >
                 ${ticket['owner']}
               </div>
 <?python
@@ -212,24 +204,22 @@ offset=offset+1
           </div>
         </td>
         <td  valign="top">
-          <div style="overflow: auto; position: relative; height: ${numticket*ti+110}px;" >
+          <div style="overflow: auto; position: relative; height: ${numticket*ti+85}px;" >
             <small>
               <!-- day -->
               <span py:if="dw>11" py:for="d in range(0,term)">
                 <div style="top:30px; left: ${(offset)*dw}px; width: ${dw}px;" class="gantt_hdr">
                   ${weekdays[cur.weekday()]}
                 </div>
-                <div py:if="cur.weekday() > 4" style="top:45px; left: ${(d)*dw}px; width: ${dw}px; height: ${(numticket+1)*ti}px;" class="gantt_hdr">
+                <div py:if="cur.weekday() > 4" style="top:45px; left: ${(d)*dw}px; width: ${dw}px; height: ${numticket*ti}px;" class="gantt_hdr">
                 </div>
                 <!-- week -->
                 <span py:if="cur.weekday() == 6">
                   <div py:if="(term - d)>=7" style="top:15px; left: ${d*dw}px; width: ${dw*7}px;" class="gantt_hdr">
                     ${cur.month}/${cur.day}
                   </div>
-                  <div py:if="(term - d)&lt;7" style="top:15px; left: ${d*dw}px; width: ${(term-d)*dw}px;" class="gantt_hdr">
-                  </div>
-                  <div py:if="d&lt;7" style="top:15px; left: 0px; width: ${offset*dw}px;" class="gantt_hdr">
-                  </div>
+                  <div py:if="(term - d)&lt;7" style="top:15px; left: ${d*dw}px; width: ${(term-d)*dw}px;" class="gantt_hdr"></div>
+                  <div py:if="d&lt;7" style="top:15px; left: 0px; width: ${offset*dw}px;" class="gantt_hdr"></div>
                 </span>
 
                 <!-- month -->
@@ -239,11 +229,11 @@ offset=offset+1
                   </div>
                 </span>
                 <!-- left line of chart -->
-                <div class="line" style="height: ${(numticket+1)*ti}px; top: 45px; left: 0px; width: 1px;">&nbsp;</div>
+                <div class="line" style="height: ${numticket*ti}px; top: 45px; left: 0px; width: 1px;">&nbsp;</div>
                 <!-- right line of chart -->
-                <div style="position: absolute; border-left: 1px solid gray; height: ${(numticket+1)*ti}px; top: 45px; left: ${term*dw+1}px; width: 1px;">&nbsp;</div>
+                <div style="position: absolute; border-left: 1px solid gray; height: ${numticket*ti}px; top: 45px; left: ${term*dw+1}px; width: 1px;">&nbsp;</div>
                 <!-- bottom line of chart -->
-                <div style="position: absolute; border-top: 1px solid gray; height: 1px; top: ${(numticket+1)*ti+46}px; left: 0px; width: ${term*dw+1}px;">&nbsp;</div>
+                <div style="position: absolute; border-top: 1px solid gray; height: 1px; top: ${numticket*ti+46}px; left: 0px; width: ${term*dw+1}px;">&nbsp;</div>
 
 <?python
 cur = cur + timedelta(days=1)
@@ -287,18 +277,28 @@ else:
     complete = int(complete)*barw/100-(gap)*dw
     if assign*dw+complete > term*dw:
         complete = (term-assign)*dw
+#milestone
+ms_days = -1
+if selected_milestone != "" and selected_milestone != None:
+    for ml in milestones:
+        if 'name' in ml and ml.get('name',None) == ticket.get('milestone',None):
+            if 'due' in ml and first <= ml['due'] and (ml['due']-first).days < term:
+                ms_days = (ml['due']-first).days
+
 ?>
                 <!-- draw chart -->
-                <div py:if="assign!=-1 and todow>0" style="top: ${offset*ti+60}px; left: ${assign*dw}px; width: ${todow}px;" class="ticket ticket_todo"></div>
-                <div py:if="latew>0 and assign!=-1" style="top: ${offset*ti+60}px; left: ${assign*dw}px; width: ${latew}px;" class="ticket ticket_late"></div>
-                <div py:if="complete>0 and assign!=-1" style="top: ${offset*ti+60}px; left: ${assign*dw}px; width: ${complete}px;" class="ticket ticket_done"></div>
+                <div py:if="assign!=-1 and todow>0" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${todow}px;" class="ticket ticket_todo"></div>
+                <div py:if="latew>0 and assign!=-1" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${latew}px;" class="ticket ticket_late"></div>
+                <div py:if="complete>0 and assign!=-1" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${complete}px;" class="ticket ticket_done"></div>
+                <div py:if="ms_days != -1" class="milestone" style="top: ${offset*ti+46}px; left: ${ms_days*dw+1}px; width: ${dw}px; height: ${ti}px;"></div>
+
 <?python
 offset=offset+1
 ?>
               </span>
             </small>
             <!-- draw baseline -->
-            <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${(numticket+1)*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
+            <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${numticket*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
           </div>
         </td>
       </tr>

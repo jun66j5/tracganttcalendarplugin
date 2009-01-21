@@ -138,13 +138,14 @@ mday = first
           <span py:for="d in range(0,7)" py:strip="True" >
 <?python
 cls="active"
-if d == 0 or d==6:
+holiday_desc = holidays.get(format_date(parse_date(mday.isoformat())))
+if d == 0 or d==6 or holiday_desc:
      cls="holiday"
 if mday == date.today():
      cls="today"
 ?>
             <td class="$cls" style="width: 14%;" valign="top">
-              <div class="textright">${mday.day}</div>
+              <div class="textright"><span py:attrs="{'title':holiday_desc}" py:strip="holiday_desc==None" >${mday.day}</span></div>
               <span py:for="t in tickets" py:strip="True" >
 <?python
 img_url = None

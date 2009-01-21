@@ -208,10 +208,14 @@ offset=offset+1
             <small>
               <!-- day -->
               <span py:if="dw>11" py:for="d in range(0,term)">
+<?python
+holiday_desc = holidays.get(format_date(parse_date(cur.isoformat())))
+?>
+
                 <div style="top:30px; left: ${(offset)*dw}px; width: ${dw}px;" class="gantt_hdr">
                   ${weekdays[cur.weekday()]}
                 </div>
-                <div py:if="cur.weekday() > 4" style="top:45px; left: ${(d)*dw}px; width: ${dw}px; height: ${numticket*ti}px;" class="gantt_hdr">
+                <div py:if="cur.weekday() > 4 or holiday_desc" py:attrs="{'title':holiday_desc}" style="top:45px; left: ${(d)*dw}px; width: ${dw}px; height: ${numticket*ti}px;" class="gantt_hdr">
                 </div>
                 <!-- week -->
                 <span py:if="cur.weekday() == 6">

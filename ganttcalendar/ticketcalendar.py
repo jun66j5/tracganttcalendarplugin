@@ -1,5 +1,5 @@
 #encoding=utf-8
-import re, calendar, time
+import re, calendar, time, sys
 from datetime import datetime, date, timedelta
 
 from genshi.builder import tag
@@ -35,6 +35,9 @@ class TicketCalendarPlugin(Component):
         return firstDay, lastDay
 
     def process_request(self, req):
+        if not ( sys.version_info[0] == 2 and sys.version_info[1] >= 4):
+            raise RuntimeError("Python v.2.4 or later needed")
+        self.log.debug("process_request " + str(globals().get('__file__')))
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
         show_my_ticket = req.args.get('show_my_ticket')
@@ -102,8 +105,17 @@ class TicketCalendarPlugin(Component):
                 milestone = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
                 milestones.append(milestone)
 
+        holidays = {}
+        sql = "SELECT date,description from holiday"
+        try:
+            cursor.execute(sql)
+            for hol_date,hol_desc in cursor:
+                holidays[format_date(parse_date(hol_date, tzinfo=req.tz))]= hol_desc
+        except:
+            pass
+
         data = {'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'milestones':milestones,
-                'show_my_ticket': show_my_ticket, 'selected_milestone': selected_milestone}
+                'show_my_ticket': show_my_ticket, 'selected_milestone': selected_milestone, 'holidays':holidays}
 
         return 'calendar.html', data, None
 

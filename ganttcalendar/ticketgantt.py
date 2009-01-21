@@ -1,12 +1,12 @@
 #encoding=utf-8
-import re, calendar, time
+import re, calendar, time, sys
 from datetime import datetime, date, timedelta
 from genshi.builder import tag
 
 from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
-from trac.util.datefmt import to_datetime, parse_date
+from trac.util.datefmt import to_datetime, format_date, parse_date
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -24,6 +24,9 @@ class TicketGanttChartPlugin(Component):
         return re.match(r'/ticketgantt(?:_trac)?(?:/.*)?$', req.path_info)
 
     def process_request(self, req):
+        if not ( sys.version_info[0] == 2 and sys.version_info[1] >= 4):
+            raise RuntimeError("Python v.2.4 or later needed")
+        self.log.debug("process_request " + str(globals().get('__file__')))
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
         baseday = req.args.get('baseday')
@@ -127,10 +130,19 @@ class TicketGanttChartPlugin(Component):
         for name, in cursor:
             components.append({'name':name})
 
+        holidays = {}
+        sql = "SELECT date,description from holiday"
+        try:
+            cursor.execute(sql)
+            for hol_date,hol_desc in cursor:
+                holidays[format_date(parse_date(hol_date, tzinfo=req.tz))]= hol_desc
+        except:
+            pass
+
         data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'tickets':tickets,
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field,
                 'milestones':milestones,'components':components,
-                'selected_milestone':selected_milestone,'selected_component': selected_component}
+                'selected_milestone':selected_milestone,'selected_component': selected_component, 'holidays':holidays}
         return 'gantt.html', data, None
 
     def get_templates_dirs(self):

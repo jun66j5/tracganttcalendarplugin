@@ -1,96 +1,43 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://genshi.edgewall.org/"
-      xmlns:xi="http://www.w3.org/2001/XInclude">
+      xmlns:xi="http://www.w3.org/2001/XInclude"
+      py:with="px_ti=25;px_hd=46;px_dw=12;px_ch=10;maxtic=len(tickets);">
   <xi:include href="layout.html" />
   <xi:include href="macros.html" />
   <head>
-    <style>
-      table.list {
-        width:100%;
-        border-collapse: collapse;
-        margin-bottom: 6px;
-      }
+    <style type="text/css">
+      table.list     {width:100%;border-collapse: collapse;margin-bottom: 6px;}
+      table.list td  {padding:2px;}
+      .border_line   {background-color: gray;}
+      .hdr           {position: absolute;background-color: #eee;}
+      .hdr_title     {display:block;position: absolute; width:100%;text-align:center;font-size:10px;}
+      .bdy           {position: absolute;background-color: #fff;text-align: left;top:${px_hd}px;height:${maxtic*px_ti}px;}
+      .bdy_elem      {position: absolute;font-size: 9px;left:1px;height:${px_ti-2}px;}
 
-      table.list td {
-        padding:2px;
-      }
+      .tip           {position: static;}
+      .tip span.popup{position: absolute;visibility: hidden;background-color: #ffe;color: black;border: 1px solid #555;left: 20px;top: 30px;width: 400px; padding: 3px;}
+      .tip:hover span.popup
+                     {visibility: visible; z-index: 100;}
 
-      .tip {
-        display: none; text-align:left;
-      }
+      .tic_done      {position: absolute; overflow: hidden; background:lightgreen;}
+      .tic_late      {position: absolute; overflow: hidden; background:pink;}
+      .tic_todo      {position: absolute; overflow: hidden; background:lightgrey;}
+      .tic_done_bl   {position: absolute; overflow: hidden; background:green;}
+      .tic_late_bl   {position: absolute; overflow: hidden; background:red;}
+      .tic_todo_bl   {position: absolute; overflow: hidden; background:gray;}
 
-      .active {
-        background-color:#fff;
-      }
-
-      div.ticket:hover span.tip{
-        display:block;
-        position:absolute;
-        border:1px solid #555;
-        background-color: #ffe;
-        font-size: 8pt;
-        top: 12pt;
-        left:12pt;
-        z-index: 100;
-      }
-
-
-      .ticket_late { background:pink; border: 1px solid red; }
-      .ticket_done { background:lightgreen; border: 1px solid green; }
-      .ticket_todo { background:lightgrey; border: 1px solid gray; }
-
-      .ticket {
-        font-size: 9px;
-        position: absolute;
-        height:8px;
-        color:black;
-      }
-
-      .baseline {
-        border-left: 1px dashed red;
-        position: absolute;
-      }
-
-      .milestone {
-        border-right: 2px solid red;
-        position: absolute;
-      }
-
-      .line {
-        border-left: 1px solid gray;
-        border-top: 1px solid gray;
-        position: absolute;
-      }
-
-      .gantt_hdr {
-        position:absolute;
-        top:0;
-        height:14px;
-        border-top: 1px solid gray;
-        border-bottom: 1px solid gray;
-        border-right: 1px solid gray;
-        border-left: 1px solid gray;
-        background-color: #eee;
-        text-align: center;
-        overflow: hidden;
-      }
+      .baseline      {position: absolute; overflow: hidden; border-left: 1px dashed red;}
+      .milestone  {position: absolute; overflow: hidden; background-color: red;}
     </style>
   </head>
-  <body>
-<?python
-import calendar
-from datetime import timedelta
-from trac.util.datefmt import format_date, parse_date
-
-weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
-?>
+  <body py:with="weekdays = ['月', '火', '水' ,'木', '金', '土', '日']">
     <form>
       <table class="list">
         <tr>
           <td>
           </td>
           <td>
-            基準日<input type="text" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
+            基準日<input type="text" id="field-baseday" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
             ソートするフィールド
             <select name="sorted_field">
               <option value="component" selected="${sorted_field=='component' or None}">component</option>
@@ -101,14 +48,14 @@ weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
             絞込みをします
             マイルストーン = 
             <select name="selected_milestone">
-            <py:for each="i in milestones" py:strip="True" >
-              <option selected="${selected_milestone==i.name or None}" value="${i.name}">${i.name}</option>
+            <py:for each="i in milestones.keys()">
+              <option selected="${selected_milestone==i or None}" value="$i">$i</option>
             </py:for>
             </select>
             AND 
             コンポーネント =
             <select name="selected_component">
-            <py:for each="i in components" py:strip="True" >
+            <py:for each="i in components">
                 <option selected="${selected_component==i.name or None}" value="${i.name}">${i.name}</option>
             </py:for>
             </select>
@@ -124,7 +71,7 @@ weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
           </td>
           <td align="center">
             <select name="year">
-              <option py:for="y in [2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012]"
+              <option py:for="y in range(current.year-3,current.year+4)"
                      value="$y"
                      selected="${y==current.year or None}">$y</option>
             </select>
@@ -142,171 +89,98 @@ weekdays = ["月", "火", "水" ,"木", "金", "土", "日"]
       </table>
     </form>
     <!-- gantt -->
-<?python
-dw = 12 # day width
-ti = 25 # ticket interval
-cur = first = current.replace(day=1)
-base = (baseday-first).days
-term = (first.__add__(timedelta(100)).replace(day=1)-first).days #3 month
-offset = 0
-numticket = len(tickets)
-?>
-
-    <table style="width: 100%;">
-      <tr style="height: ${numticket*ti+85}px;">
-        <td style="width: 300px;" valign="top">
-          <!-- line left of milestone -->
-          <div style="overflow: none; position: relative; height: ${numticket*ti+85}px;">
-            <!-- line between milestone and ticket -->
-            <div style="position: absolute; top: 0px; left: 0px; width: 88px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
-            <!-- line between ticket and owner -->
-            <div style="position: absolute; top: 0px; left: 0px; width: 192px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
-            <!-- line right of owner -->
-            <div style="position: relative; top: 0px; left: 0px; width: 300px; height:${numticket*ti+46}px; border-top: 1px solid gray; border-bottom: 1px solid gray; border-right: 1px solid gray; border-left: 1px solid gray;" />
-
-            <div style="top:0px; left: 0px; width: 89px; height: 44px" class="gantt_hdr">
-              ${_(sorted_field)}
-            </div>
-            <div style="top:0px; left: 89px; width: 104px; height: 44px" class="gantt_hdr">チケット</div>
-            <div style="top:0px; left: 193px; width: 107px; height: 44px" class="gantt_hdr">担当者</div>
-
-<?python
-offset = 0
-item = None
-?>
-            <span py:for="ticket in tickets">
-              <!-- draw ticket label -->
-              <div py:if="ticket[sorted_field]!=item" style="top: ${offset*ti+46}px; left: 4px; width: 92px" class="ticket" >
-                ${ticket[sorted_field]}
-              </div>
-<?python
-item = ticket[sorted_field]
-?>
-              <div style="top: ${offset*ti+46}px; left: 92px; width: 100px;" class="ticket" >
-                <span class="tip">
-                  <pre><span class="type">${ticket['type']}</span>#${ticket['id']}: ${ticket['summary']}</pre>
-                  <strong>担当者</strong>: ${ticket['owner']}<br />
-                  <strong>開始日</strong>: ${format_date(parse_date(ticket['due_assign'].isoformat()))}<br />
-                  <strong>終了日</strong>: ${format_date(parse_date(ticket['due_close'].isoformat()))}<br />
-                  <strong>達成率</strong>: ${ticket['complete']}%<br />
-                  <strong>詳細</strong>: <pre>${ticket['description']}</pre>
-                </span>
-                <a href="${req.href.ticket()}/${ticket['id']}">#${ticket['id']}:${ticket['summary'][0:10]}</a>
-              </div>
-              <div style="top: ${offset*ti+46}px; left: 196px;" class="ticket" >
-                ${ticket['owner']}
-              </div>
-<?python
-offset=offset+1
-?>
-              <br />
-            </span>
+    <div style="position:relative;left:1px;top:1px;width:100%;height:${maxtic*px_ti+px_hd+1+40}px;">
+      <!-- right side -->
+      <div style="overflow:auto;margin-left:308px;margin-right:4px;position:relative;left:0px;top:1px;height:${maxtic*px_ti+px_hd+1+30}px;">
+        <div class="border_line" style="left:0px;top:1px;width:${px_dw*days_term+1}px;height:${maxtic*px_ti+px_hd+1}px;">
+          <!-- head and sun,sta,holiday -->
+          <div class="bdy" style="position:relative;left:1px;top:${px_hd}px;width:${px_dw*days_term-1}px;height:${maxtic*px_ti}px;"/>
+<py:for each="cnt in reversed(range(days_term))" py:with="cur=first_date+timedelta(cnt);wk=cur.weekday()">
+          <div py:if="cur.day == 1" py:with="days_thismonth=calendar.monthrange(cur.year,cur.month)[1];" class="hdr hdr_title" style="left:${px_dw*cnt+1}px;top:${(px_hd-4)/3*0+1}px;width: ${days_thismonth*px_dw-1}px;height:${(px_hd-4)/3}px;">${cur.year}/${cur.month}</div>
+          <div py:if="wk==6 and(cur-first_date).days+7&lt;days_term" class="hdr hdr_title" style="left:${px_dw*cnt+1}px;top:${(px_hd-4)/3*1+2}px;width: ${px_dw*7-1}px;height:${(px_hd-4)/3}px;">${cur.month}/${cur.day}</div>
+          <div py:if="wk==6 and(cur-first_date).days+7&gt;days_term" class="hdr hdr_title" style="left:${px_dw*cnt+1}px;top:${(px_hd-4)/3*1+2}px;width: ${px_dw*(days_term-(cur-first_date).days)-1}px;height:${(px_hd-4)/3}px;"/>
+          <div class="hdr hdr_title" style="left:${px_dw*cnt+1}px;top:${(px_hd-4)/3*2+3}px;width: ${px_dw-1}px;height:${(px_hd-4)/3}px;">${weekdays[wk]}</div>
+  <py:with vars="holiday_desc = holidays.get(format_date(parse_date(cur.isoformat())));">
+    <py:if test="cur.weekday()&gt;4or holiday_desc">
+          <div class="border_line" style="position:absolute;top:${px_hd}px; left: ${px_dw*cnt}px; width: ${px_dw+1}px; height: ${maxtic*px_ti+1}px;">
+            <div class="hdr" py:attrs="{'title':holiday_desc}" style="top:0px; left:1px; width: ${px_dw-1}px; height: ${maxtic*px_ti}px;"/>
           </div>
-        </td>
-        <td  valign="top">
-          <div style="overflow: auto; position: relative; height: ${numticket*ti+85}px;" >
-            <small>
-              <!-- day -->
-              <span py:if="dw>11" py:for="d in range(0,term)">
-<?python
-holiday_desc = holidays.get(format_date(parse_date(cur.isoformat())))
-?>
+    </py:if>
+  </py:with>
+</py:for>
+          <div py:if="first_date.weekday()!=6" class="hdr" style="left:1px;top:${(px_hd-4)/3*1+2}px;width: ${px_dw*(6-first_date.weekday())-1}px;height:${(px_hd-4)/3}px;"/>
+          <!-- chart -->
+<py:def function="print_chart(kind)">
+  <py:with vars="as=tickets[cnt].get('all_start');e=tickets[cnt].get(kind +'_end');">
+    <py:if test="e!=None and e-as!= 0">
+          <div class="${'tic_'+kind+'_bl'}" style="left:${int(as*px_dw+1)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2)}px;width: ${int((e-as)*px_dw)}px;height:${px_ch}px;"/>
+          <div class="${'tic_'+kind}" style="left:${int(as*px_dw+2)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2+1)}px;width: ${int((e-as)*px_dw)-2}px;height:${px_ch-2}px;"/>
+    </py:if>
+  </py:with>
+</py:def>
+<py:for each="cnt in reversed(range(maxtic))">
+          ${print_chart('todo')}
+          ${print_chart('late')}
+          ${print_chart('done')}
+  <py:if test="selected_milestone != '' and selected_milestone != None">
+    <py:if test="tickets[cnt].get('milestone')!= None and tickets[cnt].get('milestone') in milestones" py:with="d= milestones[tickets[cnt]['milestone']].get('due')">
+      <py:if test="d!=None and 0 &lt;= (d-first_date).days+1 &lt; days_term" py:with="d=(d-first_date).days+1">
+          <div class="milestone" style="left: ${d*px_dw}px; top: ${cnt*px_ti+px_hd}px;  width: 2px; height: ${px_ti}px;"></div>
+      </py:if>
+    </py:if>
+  </py:if>
+</py:for>
+<py:with vars="base = (baseday-first_date).days+1">
+          <!-- baseline -->
+          <div py:if="base+1 &lt; days_term" class="baseline" style="left:${base*px_dw}px;top:${px_hd}px; height:${maxtic*px_ti}px; width: 0px;"/>
+</py:with>
+        </div>
+      </div>
+      <!-- left side -->
+      <div style="position:absolute;background-color:gray;left:1px;top:1px;width:304px;height:${maxtic*px_ti+px_hd+1}px;">
+        <div class="hdr" style="left:1px;top:1px;width: 89px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;">${_(sorted_field)}</span></div>
+        <div class="hdr" style="left:91px;top:1px;width:104px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;">チケット</span></div>
+        <div class="hdr" style="left:196px;top:1px;width:107px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;">担当者</span></div>
 
-                <div style="top:30px; left: ${(offset)*dw}px; width: ${dw}px;" class="gantt_hdr">
-                  ${weekdays[cur.weekday()]}
-                </div>
-                <div py:if="cur.weekday() > 4 or holiday_desc" py:attrs="{'title':holiday_desc}" style="top:45px; left: ${(d)*dw}px; width: ${dw}px; height: ${numticket*ti}px;" class="gantt_hdr">
-                </div>
-                <!-- week -->
-                <span py:if="cur.weekday() == 6">
-                  <div py:if="(term - d)>=7" style="top:15px; left: ${d*dw}px; width: ${dw*7}px;" class="gantt_hdr">
-                    ${cur.month}/${cur.day}
-                  </div>
-                  <div py:if="(term - d)&lt;7" style="top:15px; left: ${d*dw}px; width: ${(term-d)*dw}px;" class="gantt_hdr"></div>
-                  <div py:if="d&lt;7" style="top:15px; left: 0px; width: ${offset*dw}px;" class="gantt_hdr"></div>
-                </span>
-
-                <!-- month -->
-                <span py:if="cur.day==1">
-                  <div style="top:0px; left: ${d*dw}px; width: ${calendar.monthrange(cur.year,cur.month)[1]*dw}px;" class="gantt_hdr">
-                    ${cur.year}/${cur.month}
-                  </div>
-                </span>
-                <!-- left line of chart -->
-                <div class="line" style="height: ${numticket*ti}px; top: 45px; left: 0px; width: 1px;">&nbsp;</div>
-                <!-- right line of chart -->
-                <div style="position: absolute; border-left: 1px solid gray; height: ${numticket*ti}px; top: 45px; left: ${term*dw+1}px; width: 1px;">&nbsp;</div>
-                <!-- bottom line of chart -->
-                <div style="position: absolute; border-top: 1px solid gray; height: 1px; top: ${numticket*ti+46}px; left: 0px; width: ${term*dw+1}px;">&nbsp;</div>
-
-<?python
-cur = cur + timedelta(days=1)
-offset = offset + 1
-?>
+<py:def function="print_field(px_x,px_w,ticket_col,dupchk=False)">
+        <div class="bdy" style="left:${px_x}px;width:${px_w}px;">
+  <py:for each="cnt in range(maxtic)" py:with="t=tickets[cnt]">
+    <py:choose>
+      <py:when test="ticket_col=='ticket'" py:with="cnt=maxtic-cnt-1;t=tickets[cnt];">
+          <div class="bdy_elem" style="top: ${cnt*px_ti}px;width: ${px_w-2}px;">
+            <a class="tip" href="${req.href.ticket()}/${t['id']}">#${t['id']}:${t['summary'][0:14]}
+              <span class="popup">
+                <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
+                <strong>担当者</strong>: ${t['owner']}<br/>
+                <strong>開始日</strong>: ${format_date(parse_date(t['due_assign'].isoformat()))}<br/>
+                <strong>終了日</strong>: ${format_date(parse_date(t['due_close'].isoformat()))}<br/>
+                <strong>達成率</strong>: ${t['complete']}%<br/>
+                <strong>詳細</strong>: <pre>${t['description']}</pre>
               </span>
-              <!-- tickets -->
-<?python
-offset = 0;
-?>
-              <span py:for="ticket in tickets">
-<?python
-cls = (ticket['due_close']-first).days
-assign = (ticket['due_assign']-first).days
-barw = (cls-assign+1)*dw
-gap = 0
-if assign < 0:
-    gap = -assign
-    assign = 0
-if assign > term:
-    assign = -1
-if cls < 0 and not (assign != -1):
-    cls = 0
-if (cls - assign + assign) > term:
-    cls = term - 1
-todow = (cls-assign+1)*dw
-
-if assign*dw+todow > term*dw:
-    todow = (term-assign)*dw
-
-latew = 0
-if base > assign:
-    latew = (base-assign+1)*dw
-    if latew > todow:
-        latew = todow
-
-complete = ticket['complete']
-if complete == None or complete == "" or todow <= 0:
-     complete = 0
-else:
-    complete = int(complete)*barw/100-(gap)*dw
-    if assign*dw+complete > term*dw:
-        complete = (term-assign)*dw
-#milestone
-ms_days = -1
-if selected_milestone != "" and selected_milestone != None:
-    for ml in milestones:
-        if 'name' in ml and ml.get('name',None) == ticket.get('milestone',None):
-            if 'due' in ml and first <= ml['due'] and (ml['due']-first).days < term:
-                ms_days = (ml['due']-first).days
-
-?>
-                <!-- draw chart -->
-                <div py:if="assign!=-1 and todow>0" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${todow}px;" class="ticket ticket_todo"></div>
-                <div py:if="latew>0 and assign!=-1" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${latew}px;" class="ticket ticket_late"></div>
-                <div py:if="complete>0 and assign!=-1" style="top: ${offset*ti+52}px; left: ${assign*dw}px; width: ${complete}px;" class="ticket ticket_done"></div>
-                <div py:if="ms_days != -1" class="milestone" style="top: ${offset*ti+46}px; left: ${ms_days*dw+1}px; width: ${dw}px; height: ${ti}px;"></div>
-
-<?python
-offset=offset+1
-?>
-              </span>
-            </small>
-            <!-- draw baseline -->
-            <div py:if="base+1 &lt; term" class="baseline" style="top: 45px; height: ${numticket*ti}px; left: ${(base+1)*dw}px; width: 10px;">&nbsp;</div>
+            </a>
           </div>
-        </td>
-      </tr>
-    </table>
+      </py:when>
+      <py:otherwise>
+        <py:choose>
+          <py:when test="dupchk">
+          <div py:if="not cnt or t[ticket_col]!=tickets[cnt-1][ticket_col]" class="bdy_elem" style="top:${cnt*px_ti}px;width: ${px_w-2}px;">${t[ticket_col]}</div>
+          </py:when>
+          <py:otherwise>
+          <div class="bdy_elem" style="top: ${cnt*px_ti}px;width: ${px_w-2}px;">${t[ticket_col]}</div>
+          </py:otherwise>
+        </py:choose>
+      </py:otherwise>
+    </py:choose>
+  </py:for>
+        </div>
+</py:def>
+
+        ${print_field( 196,107,'owner')}
+        ${print_field(  91,104,'ticket')}
+        ${print_field(   1, 89,sorted_field,dupchk=True)}
+
+      </div>
+    </div>
     <!-- gantt -->
   </body>
 </html>

@@ -44,7 +44,7 @@ class HolidayAdminPanel(Component):
                 if not isinstance(sel, list):
                     sel = [sel]
                 for name in sel:
-                    keydate = format_date(parse_date( req.args.get('date'), tzinfo=req.tz))
+                    keydate = format_date(parse_date( name, tzinfo=req.tz))
                     sql = "DELETE FROM holiday WHERE date ='" + keydate+ "'"
                     cursor.execute(sql)
                 db.commit()

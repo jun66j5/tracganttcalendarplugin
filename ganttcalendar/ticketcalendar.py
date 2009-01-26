@@ -1,5 +1,5 @@
-#encoding=utf-8
-import re, calendar, time, sys
+# -*- coding: utf-8 -*-
+import re, calendar, time
 from datetime import datetime, date, timedelta
 
 from genshi.builder import tag
@@ -35,8 +35,6 @@ class TicketCalendarPlugin(Component):
         return firstDay, lastDay
 
     def process_request(self, req):
-        if not ( sys.version_info[0] == 2 and sys.version_info[1] >= 4):
-            raise RuntimeError("Python v.2.4 or later needed")
         self.log.debug("process_request " + str(globals().get('__file__')))
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
@@ -67,8 +65,8 @@ class TicketCalendarPlugin(Component):
         sql = ("SELECT id, type, summary, owner, description, status, a.value, c.value from ticket t "
                     "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
                     "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                    "WHERE ((a.value > '%s' AND a.value < '%s' ) "
-                    "OR (c.value > '%s' AND c.value < '%s')) %s %s" %
+                    "WHERE ((a.value >= '%s' AND a.value <= '%s' ) "
+                    "OR (c.value >= '%s' AND c.value <= '%s')) %s %s" %
                     (format_date(parse_date(first.isoformat())),
                         format_date(parse_date(last.isoformat())),
                         format_date(parse_date(first.isoformat())),
@@ -100,10 +98,10 @@ class TicketCalendarPlugin(Component):
 
         milestones = [{}]
         for name, due, completed, description in cursor:
+            milestone = {'name':name, 'completed':completed != 0,'description':description}
             if due!=0:
-                due_date = to_datetime(due, req.tz).date()
-                milestone = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
-                milestones.append(milestone)
+                milestone['due']= to_datetime(due, req.tz).date()
+            milestones.append(milestone)
 
         holidays = {}
         sql = "SELECT date,description from holiday"
@@ -114,8 +112,40 @@ class TicketCalendarPlugin(Component):
         except:
             pass
 
-        data = {'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last, 'tickets':tickets, 'milestones':milestones,
-                'show_my_ticket': show_my_ticket, 'selected_milestone': selected_milestone, 'holidays':holidays}
+        #days
+        days={}
+        for d in range((last-first).days+1):
+            mday= first + timedelta(d)
+            mday_str= format_date(parse_date(mday.isoformat()))
+            days[mday]={}
+            #day kind
+            days[mday]['kind']= 'active'
+            if mday_str in holidays.keys():
+                days[mday]['holiday_desc']= holidays[mday_str]
+                days[mday]['kind']= 'holiday'
+            if mday == date.today():
+                days[mday]['kind']= 'today'
+            elif mday.weekday() in (5,6):
+                days[mday]['kind']= 'holiday'
+            #ticket
+            days[mday]['ticket']=[]
+            for t in range(len(tickets)):
+                if mday == tickets[t].get('due_assign') == tickets[t].get('due_close'):
+                    days[mday]['ticket'].append({'img':'bw','num':t})
+                elif mday == tickets[t].get('due_assign'):
+                    days[mday]['ticket'].append({'img':'from','num':t})
+                elif mday == tickets[t].get('due_close'):
+                    days[mday]['ticket'].append({'img':'to','num':t})
+            #milestone
+            days[mday]['milestone']=[]
+            for m in range(len(milestones)):
+                if mday== milestones[m].get('due'):
+                    days[mday]['milestone'].append(m)
+
+        data = {'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last,
+                'tickets':tickets, 'milestones':milestones,'days':days,
+                'show_my_ticket': show_my_ticket, 'selected_milestone': selected_milestone,
+                'parse_date':parse_date,'format_date':format_date, 'holidays':holidays}
 
         return 'calendar.html', data, None
 

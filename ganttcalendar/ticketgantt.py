@@ -1,4 +1,4 @@
-#encoding=utf-8
+# -*- coding: utf-8 -*-
 import re, calendar, time, sys
 from datetime import datetime, date, timedelta
 from genshi.builder import tag
@@ -23,9 +23,17 @@ class TicketGanttChartPlugin(Component):
     def match_request(self, req):
         return re.match(r'/ticketgantt(?:_trac)?(?:/.*)?$', req.path_info)
 
+    def adjust( self, x_start, x_end, term):
+        if x_start > term or x_end < 0:
+            x_start= done_end= None
+        else:
+            if x_start < 0:
+                x_start= 0
+            if x_end > term:
+                x_end= term
+        return x_start, x_end
+
     def process_request(self, req):
-        if not ( sys.version_info[0] == 2 and sys.version_info[1] >= 4):
-            raise RuntimeError("Python v.2.4 or later needed")
         self.log.debug("process_request " + str(globals().get('__file__')))
         ymonth = req.args.get('month')
         yyear = req.args.get('year')
@@ -52,6 +60,10 @@ class TicketGanttChartPlugin(Component):
 
         # cal previous month
         pmonth = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
+
+        first_date= cday.replace(day=1)
+        days_term= (first_date.__add__(timedelta(100)).replace(day=1)-first_date).days
+
         # process ticket
         db = self.env.get_db_cnx()
         cursor = db.cursor();
@@ -101,6 +113,14 @@ class TicketGanttChartPlugin(Component):
                 continue
             if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
                 complete = complete[0:len(complete)-1]
+            try:
+                if int(complete) >100:
+                    complete = "100"
+            except:
+                complete = "0"
+            complete = int(complete)
+            if due_assign_date > due_close_date:
+                continue
             if milestone == None or milestone == "":
                 milestone = "*"
             if component == None or component == "":
@@ -108,20 +128,54 @@ class TicketGanttChartPlugin(Component):
             ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status,
                     'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, 
                     'milestone': milestone,'component': component}
+            #calc chart
+            base = (baseday -first_date).days + 1
+            done_start= done_end= None
+            late_start= late_end= None
+            todo_start= todo_end= None
+            all_start=(due_assign_date-first_date).days
+            all_end=(due_close_date-first_date).days + 1
+            done_start= all_start
+            done_end= done_start + (all_end - all_start)*int(complete)/100.0
+            if all_end <= base < days_term:
+                late_start= done_end
+                late_end= all_end
+            elif done_end <= base < all_end:
+                late_start= done_end
+                late_end= todo_start= base
+                todo_end= all_end
+            else:
+                todo_start= done_end
+                todo_end= all_end
+            #
+            done_start, done_end= self.adjust(done_start,done_end,days_term)
+            late_start, late_end= self.adjust(late_start,late_end,days_term)
+            todo_start, todo_end= self.adjust(todo_start,todo_end,days_term)
+            all_start, all_end= self.adjust(all_start,all_end,days_term)
+
+            if done_start != None:
+                ticket.update({'done_start':done_start,'done_end':done_end})
+            if late_start != None:
+                ticket.update({'late_start':late_start,'late_end':late_end})
+            if todo_start != None:
+                ticket.update({'todo_start':todo_start,'todo_end':todo_end})
+            if all_start != None:
+                ticket.update({'all_start':all_start})
+
             self.log.debug(ticket)
             tickets.append(ticket)
 
         # milestones
-        milestones = [{}]
+        milestones = {'':None}
         sql = ("SELECT name, due, completed, description FROM milestone")
         self.log.debug(sql)
         cursor.execute(sql)
         for name, due, completed, description in cursor:
             due_date = to_datetime(due, req.tz).date()
-            item = {'name':name, 'due':due_date, 'completed':completed != 0,'description':description}
+            item = { 'due':due_date, 'completed':completed != 0,'description':description}
             if due==0:
                 del item['due']
-            milestones.append(item)
+            milestones.update({name:item})
         # componet
         components = [{}]
         sql = ("SELECT name FROM component")
@@ -139,10 +193,13 @@ class TicketGanttChartPlugin(Component):
         except:
             pass
 
-        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'tickets':tickets,
-                'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field,
-                'milestones':milestones,'components':components,
-                'selected_milestone':selected_milestone,'selected_component': selected_component, 'holidays':holidays}
+        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth}
+        data.update({'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field})
+        data.update({'selected_milestone':selected_milestone,'selected_component': selected_component})
+        data.update({'tickets':tickets,'milestones':milestones,'components':components})
+        data.update({'holidays':holidays,'first_date':first_date,'days_term':days_term})
+        data.update({'parse_date':parse_date,'format_date':format_date,'calendar':calendar})
+
         return 'gantt.html', data, None
 
     def get_templates_dirs(self):

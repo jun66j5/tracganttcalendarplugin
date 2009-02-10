@@ -35,6 +35,7 @@ class TicketCalendarPlugin(Component):
         return firstDay, lastDay
 
     def process_request(self, req):
+        req.perm.assert_permission('TICKET_VIEW')
         self.log.debug("process_request " + str(globals().get('__file__')))
         ymonth = req.args.get('month')
         yyear = req.args.get('year')

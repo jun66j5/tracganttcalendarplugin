@@ -145,8 +145,8 @@
                 <span class="popup">
                   <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
                   <strong>担当者</strong>: ${t['owner']}<br />
-                  <strong>開始日</strong>: ${format_date(parse_date(t['due_assign'].isoformat()))}<br />
-                  <strong>終了日</strong>: ${format_date(parse_date(t['due_close'].isoformat()))}<br />
+                  <strong>開始日</strong>: <span py:if="t['due_assign'] != None">${format_date(parse_date(t['due_assign'].isoformat()))}</span><br />
+                  <strong>終了日</strong>: <span py:if="t['due_close'] != None">${format_date(parse_date(t['due_close'].isoformat()))}</span><br />
                   <strong>詳細</strong>: <pre>${t['description']}</pre>
                 </span>
               </a>

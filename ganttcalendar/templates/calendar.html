@@ -4,7 +4,38 @@
   <xi:include href="layout.html" />
   <xi:include href="macros.html" />
   <head>
-    <style>
+    <script type="text/javascript" src="${chrome.htdocs_location}js/folding.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("fieldset legend.foldable").enableFolding(false);
+        /* Hide the filters for saved queries. */
+        $("#options").toggleClass("collapsed");
+      });
+    </script>
+
+    <style type="text/css">
+      form fieldset.collapsed { 
+        border-width: 0px;
+        margin-bottom: 0px;
+        padding: 0px .5em;
+      }
+      fieldset legend.foldable :link,
+      fieldset legend.foldable :visited { 
+        background: url(${chrome.htdocs_location}expanded.png) 0 50% no-repeat;
+        border: none;
+        color: #666;
+        font-size: 110%;
+        padding-left: 16px;
+      }
+      fieldset legend.foldable :link:hover, fieldset legend.foldable :visited:hover {
+        background-color: transparent;
+      }
+      
+      fieldset.collapsed legend.foldable :link, fieldset.collapsed legend.foldable :visited { 
+        background-image: url(${chrome.htdocs_location}collapsed.png);  
+      }
+      fieldset.collapsed table, fieldset.collapsed div { display: none }
+
       table.list {
         width:100%;
         border-collapse: collapse;
@@ -78,21 +109,26 @@
   </head>
   <body>
     <form>
+      <fieldset id="options">
+        <legend class="foldable">設定</legend>
+        <table class="list">
+          <tr>
+            <td>
+            </td>
+            <td>
+              マイルストーン
+              <select name="selected_milestone">
+                <option py:for="m in milestones" value="${m.name}" selected="${selected_milestone==m.name or None}">${m.name}</option>
+              </select>
+              <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
+            </td>
+            <td align="right">
+              <input type="submit" value="更新" />
+            </td>
+          </tr>
+        </table>
+      </fieldset>
       <table class="list">
-        <tr>
-          <td>
-          </td>
-          <td>
-            マイルストーン
-            <select name="selected_milestone">
-              <option py:for="m in milestones" value="${m.name}" selected="${selected_milestone==m.name or None}">${m.name}</option>
-            </select>
-            <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
-          </td>
-          <td align="right">
-            <input type="submit" value="更新" />
-          </td>
-        </tr>
         <tr>
           <td>
             <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
@@ -109,6 +145,7 @@
                      value="$m" selected="${m==current.month or None}">$m</option>
             </select>
             月
+            <input type="submit" value="更新" />
           </td>
           <td align="right">
             <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
@@ -144,7 +181,7 @@
                 <span class="type">${t['type']}</span><s py:strip="t['status']!='closed'">#${t['id']}:${t['summary']}</s>
                 <span class="popup">
                   <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
-                  <strong>担当者</strong>: ${t['owner']}<br />
+                  <strong>担当者</strong>: ${format_author(t['owner'])}<br />
                   <strong>開始日</strong>: <span py:if="t['due_assign'] != None">${format_date(parse_date(t['due_assign'].isoformat()))}</span><br />
                   <strong>終了日</strong>: <span py:if="t['due_close'] != None">${format_date(parse_date(t['due_close'].isoformat()))}</span><br />
                   <strong>詳細</strong>: <pre>${t['description']}</pre>

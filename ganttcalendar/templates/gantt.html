@@ -5,7 +5,37 @@
   <xi:include href="layout.html" />
   <xi:include href="macros.html" />
   <head>
+    <script type="text/javascript" src="${chrome.htdocs_location}js/folding.js"></script>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        $("fieldset legend.foldable").enableFolding(false);
+        /* Hide the filters for saved queries. */
+        $("#options").toggleClass("collapsed");
+      });
+    </script>
+
     <style type="text/css">
+      form fieldset.collapsed { 
+        border-width: 0px;
+        margin-bottom: 0px;
+        padding: 0px .5em;
+      }
+      fieldset legend.foldable :link,
+      fieldset legend.foldable :visited { 
+        background: url(${chrome.htdocs_location}expanded.png) 0 50% no-repeat;
+        border: none;
+        color: #666;
+        font-size: 110%;
+        padding-left: 16px;
+      }
+      fieldset legend.foldable :link:hover, fieldset legend.foldable :visited:hover {
+        background-color: transparent;
+      }
+      
+      fieldset.collapsed legend.foldable :link, fieldset.collapsed legend.foldable :visited { 
+        background-image: url(${chrome.htdocs_location}collapsed.png);  
+      }
+      fieldset.collapsed table, fieldset.collapsed div { display: none }
       table.list     {width:100%;border-collapse: collapse;margin-bottom: 6px;}
       table.list td  {padding:2px;}
       .border_line   {background-color: gray;}
@@ -32,39 +62,54 @@
   </head>
   <body py:with="weekdays = ['月', '火', '水' ,'木', '金', '土', '日']">
     <form>
+      <fieldset id="options">
+        <legend class="foldable">設定</legend>
+        <table class="list">
+          <tr>
+            <td>
+              基準日<input type="text" id="field-baseday" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              ソートするフィールド
+              <select name="sorted_field">
+                <option value="component" selected="${sorted_field=='component' or None}">component</option>
+                <option value="milestone" selected="${sorted_field=='milestone' or None}">milestone</option>
+              </select><br/>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              絞込みをします
+              マイルストーン = 
+              <select name="selected_milestone">
+              <py:for each="i in milestones.keys()">
+                <option selected="${selected_milestone==i or None}" value="$i">$i</option>
+              </py:for>
+              </select>
+              AND 
+              コンポーネント =
+              <select name="selected_component">
+              <py:for each="i in components">
+                  <option selected="${selected_component==i.name or None}" value="${i.name}">${i.name}</option>
+              </py:for>
+              </select>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
+              <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />closeしたチケットを表示<br/>
+  
+            </td>
+            <td align="right" valign="bottom">
+              <input type="submit" value="更新" />
+            </td>
+          </tr>
+        </table>
+      </fieldset>
       <table class="list">
-        <tr>
-          <td>
-          </td>
-          <td>
-            基準日<input type="text" id="field-baseday" name="baseday" value="${format_date(parse_date(baseday.isoformat()))}" length="10"/>
-            ソートするフィールド
-            <select name="sorted_field">
-              <option value="component" selected="${sorted_field=='component' or None}">component</option>
-              <option value="milestone" selected="${sorted_field=='milestone' or None}">milestone</option>
-            </select><br/>
-            <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
-            <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />closeしたチケットを表示<br/>
-            絞込みをします
-            マイルストーン = 
-            <select name="selected_milestone">
-            <py:for each="i in milestones.keys()">
-              <option selected="${selected_milestone==i or None}" value="$i">$i</option>
-            </py:for>
-            </select>
-            AND 
-            コンポーネント =
-            <select name="selected_component">
-            <py:for each="i in components">
-                <option selected="${selected_component==i.name or None}" value="${i.name}">${i.name}</option>
-            </py:for>
-            </select>
-
-          </td>
-          <td align="right" valign="bottom">
-            <input type="submit" value="更新" />
-          </td>
-        </tr>
         <tr>
           <td>
             <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
@@ -81,6 +126,7 @@
                      value="$m" selected="${m==current.month or None}">$m</option>
             </select>
             月
+            <input type="submit" value="更新" />
           </td>
           <td align="right">
             <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
@@ -111,10 +157,10 @@
           <div py:if="first_date.weekday()!=6" class="hdr" style="left:1px;top:${(px_hd-4)/3*1+2}px;width: ${px_dw*(6-first_date.weekday())-1}px;height:${(px_hd-4)/3}px;"/>
           <!-- chart -->
 <py:def function="print_chart(kind)">
-  <py:with vars="as=tickets[cnt].get('all_start');e=tickets[cnt].get(kind +'_end');">
-    <py:if test="e!=None and e-as!= 0">
-          <div class="${'tic_'+kind+'_bl'}" style="left:${int(as*px_dw+1)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2)}px;width: ${int((e-as)*px_dw)}px;height:${px_ch}px;"/>
-          <div class="${'tic_'+kind}" style="left:${int(as*px_dw+2)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2+1)}px;width: ${int((e-as)*px_dw)-2}px;height:${px_ch-2}px;"/>
+  <py:with vars="s=tickets[cnt].get('all_start');e=tickets[cnt].get(kind +'_end');">
+    <py:if test="e!=None and e-s!= 0">
+          <div class="${'tic_'+kind+'_bl'}" style="left:${int(s*px_dw+1)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2)}px;width: ${int((e-s)*px_dw)}px;height:${px_ch}px;"/>
+          <div class="${'tic_'+kind}" style="left:${int(s*px_dw+2)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2+1)}px;width: ${int((e-s)*px_dw)-2}px;height:${px_ch-2}px;"/>
     </py:if>
   </py:with>
 </py:def>
@@ -151,7 +197,7 @@
             <a class="tip" href="${req.href.ticket()}/${t['id']}">#${t['id']}:${t['summary'][0:14]}
               <span class="popup">
                 <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
-                <strong>担当者</strong>: ${t['owner']}<br/>
+                <strong>担当者</strong>: ${format_author(t['owner'])}<br/>
                 <strong>開始日</strong>: ${format_date(parse_date(t['due_assign'].isoformat()))}<br/>
                 <strong>終了日</strong>: ${format_date(parse_date(t['due_close'].isoformat()))}<br/>
                 <strong>達成率</strong>: ${t['complete']}%<br/>
@@ -166,7 +212,7 @@
           <div py:if="not cnt or t[ticket_col]!=tickets[cnt-1][ticket_col]" class="bdy_elem" style="top:${cnt*px_ti}px;width: ${px_w-2}px;">${t[ticket_col]}</div>
           </py:when>
           <py:otherwise>
-          <div class="bdy_elem" style="top: ${cnt*px_ti}px;width: ${px_w-2}px;">${t[ticket_col]}</div>
+          <div class="bdy_elem" style="top: ${cnt*px_ti}px;width: ${px_w-2}px;">${ticket_col in ('owner','reporter') and format_author(t[ticket_col]) or t[ticket_col]}</div>
           </py:otherwise>
         </py:choose>
       </py:otherwise>

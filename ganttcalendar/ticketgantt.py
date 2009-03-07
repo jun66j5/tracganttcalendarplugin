@@ -134,7 +134,7 @@ class TicketGanttChartPlugin(Component):
         # get roadmap
         items = [""]
         if selected_item=='milestone':
-            sql = ("SELECT name, due, completed, description from MILESTONE")
+            sql = ("SELECT name, due, completed, description FROM milestone")
             self.log.debug(sql)
             cursor.execute(sql)
 

@@ -14,6 +14,7 @@ setup(
         [trac.plugins]
         ganttcalendar.ticketcalendar = ganttcalendar.ticketcalendar
         ganttcalendar.ticketgantt = ganttcalendar.ticketgantt
+        ganttcalendar.complete_by_close = ganttcalendar.complete_by_close
         ganttcalendar.admin = ganttcalendar.admin
     """,
     package_data={'ganttcalendar': ['templates/*.html','htdocs/img/*']},

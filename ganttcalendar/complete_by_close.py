@@ -13,6 +13,12 @@ class CompleteTicketObserver(Component):
     def __init__(self):
         pass
 
+    def ticket_created(self, ticket):
+        pass
+
+    def ticket_deleted(self, ticket):
+        pass
+
     def ticket_changed(self, ticket, comment, author, old_values):
         complete_conditions = Configuration.getlist(self.config,'ganttcalendar','complete_conditions',"'対応済,不正,重複'")
         complete_field = Configuration.get(self.config,'ganttcalendar','complete_field','complete')

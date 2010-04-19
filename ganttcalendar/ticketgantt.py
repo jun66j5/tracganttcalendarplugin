@@ -5,12 +5,56 @@ from genshi.builder import tag
 
 from trac.core import *
 from trac.web import IRequestHandler
-from trac.web.chrome import INavigationContributor, ITemplateProvider
+from trac.web.chrome import INavigationContributor, ITemplateProvider, \
+                            add_script, add_stylesheet
 from trac.util.datefmt import to_datetime, format_date, parse_date
+
+from trac.ticket.api import TicketSystem
+from trac.util.translation import _
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
 
+    substitutions = ['$USER']
+
+    # _get_constraints: internal method
+    def _get_constraints(self, req):
+        constraints = {}
+        field_names = [f['name'] for f in self.ticket_fields]
+        field_names.append('id')
+
+        # For clients without JavaScript, we remove constraints here if
+        # requested
+        remove_constraints = {}
+        to_remove = [k[10:] for k in req.args.keys()
+                     if k.startswith('rm_filter_')]
+        if to_remove: # either empty or containing a single element
+            match = re.match(r'(\w+?)_(\d+)$', to_remove[0])
+            if match:
+                remove_constraints[match.group(1)] = int(match.group(2))
+            else:
+                remove_constraints[to_remove[0]] = -1
+
+        for field in [k for k in req.args.keys() if k in field_names]:
+            vals = req.args[field]
+            if not isinstance(vals, (list, tuple)):
+                vals = [vals]
+            if vals:
+                mode = req.args.get(field + '_mode')
+                if mode:
+                    vals = [mode + x for x in vals]
+                if field in remove_constraints:
+                    idx = remove_constraints[field]
+                    if idx >= 0:
+                        del vals[idx]
+                        if not vals:
+                            continue
+                    else:
+                        continue
+                constraints[field] = vals
+
+        return constraints
+    
     # INavigationContributor methods
     def get_active_navigation_item(self, req):
         return 'ticketgantt'
@@ -88,18 +132,168 @@ class TicketGanttChartPlugin(Component):
                 condition += " AND "
             condition += "component ='" + selected_component +"'"
 
+        self.ticket_fields = TicketSystem(self.env).get_ticket_fields()
+        fields = {}
+        for field in self.ticket_fields:
+            if field['name'] == 'owner' and field['type'] == 'select':
+                # Make $USER work when restrict_owner = true
+                field['options'].insert(0, '$USER')
+            field_data = {}
+            field_data.update(field)
+            del field_data['name']
+            fields[field['name']] = field_data
+
+        labels = dict([(f['name'], f['label']) for f in self.ticket_fields])
+        labels['changetime'] = _('Modified')
+        labels['time'] = _('Created')
+
+        modes = {}
+        modes['text'] = [
+            {'name': _("contains"), 'value': "~"},
+            {'name': _("doesn't contain"), 'value': "!~"},
+            {'name': _("begins with"), 'value': "^"},
+            {'name': _("ends with"), 'value': "$"},
+            {'name': _("is"), 'value': ""},
+            {'name': _("is not"), 'value': "!"}
+        ]
+        modes['textarea'] = [
+            {'name': _("contains"), 'value': "~"},
+            {'name': _("doesn't contain"), 'value': "!~"},
+        ]
+        modes['select'] = [
+            {'name': _("is"), 'value': ""},
+            {'name': _("is not"), 'value': "!"}
+        ]
+
+        constraints = self._get_constraints(req)
+        
+        # Join with ticket_custom table as necessary
+        custom_join = ""
+        custom_fields = [f['name'] for f in self.ticket_fields if 'custom' in f]
+        for k in [k for k in constraints if k in custom_fields]:
+           custom_join += (" LEFT OUTER JOIN ticket_custom AS %s ON " \
+                      "(t.id=%s.ticket AND %s.name='%s')" % (k, k, k, k))
+        
+        def get_constraint_sql(name, value, mode, neg):
+            if name not in custom_fields:
+                name = 't.' + name
+            else:
+                name = name + '.value'
+            value = value[len(mode) + neg:]
+
+            if mode == '':
+                return ("COALESCE(%s,'')%s=%%s" % (name, neg and '!' or ''),
+                        value)
+            if not value:
+                return None
+            db = self.env.get_db_cnx()
+            value = db.like_escape(value)
+            if mode == '~':
+                value = '%' + value + '%'
+            elif mode == '^':
+                value = value + '%'
+            elif mode == '$':
+                value = '%' + value
+            return ("COALESCE(%s,'') %s%s" % (name, neg and 'NOT ' or '',
+                                              db.like()),
+                    value)
+
+        constraints_data = {}
+        for k, v in constraints.items():
+            constraint = {'values': [], 'mode': ''}
+            for val in v:
+                neg = val.startswith('!')
+                if neg:
+                    val = val[1:]
+                mode = ''
+                if val[:1] in ('~', '^', '$') \
+                                    and not val in self.substitutions:
+                    mode, val = val[:1], val[1:]
+                constraint['mode'] = (neg and '!' or '') + mode
+                constraint['values'].append(val)
+            constraints_data[k] = constraint
+
+        clauses = []
+        args = []
+        for k, v in constraints.items():
+            if req:
+                v = [val.replace('$USER', req.authname) for val in v]
+            # Determine the match mode of the constraint (contains,
+            # starts-with, negation, etc.)
+            neg = v[0].startswith('!')
+            mode = ''
+            if len(v[0]) > neg and v[0][neg] in ('~', '^', '$'):
+                mode = v[0][neg]
+
+            # Special case id ranges
+            if k == 'id':
+                ranges = Ranges()
+                for r in v:
+                    r = r.replace('!', '')
+                    ranges.appendrange(r)
+                ids = []
+                id_clauses = []
+                for a,b in ranges.pairs:
+                    if a == b:
+                        ids.append(str(a))
+                    else:
+                        id_clauses.append('id BETWEEN %s AND %s')
+                        args.append(a)
+                        args.append(b)
+                if ids:
+                    id_clauses.append('id IN (%s)' % (','.join(ids)))
+                if id_clauses:
+                    clauses.append('%s(%s)' % (neg and 'NOT ' or '',
+                                               ' OR '.join(id_clauses)))
+            # Special case for exact matches on multiple values
+            elif not mode and len(v) > 1:
+                if k not in custom_fields:
+                    col = 't.' + k
+                else:
+                    col = k + '.value'
+                clauses.append("COALESCE(%s,'') %sIN (%s)"
+                               % (col, neg and 'NOT ' or '',
+                                  ','.join(['%s' for val in v])))
+                args += [val[neg:] for val in v]
+            elif len(v) > 1:
+                constraint_sql = filter(None,
+                                        [get_constraint_sql(k, val, mode, neg)
+                                         for val in v])
+                if not constraint_sql:
+                    continue
+                if neg:
+                    clauses.append("(" + " AND ".join(
+                        [item[0] for item in constraint_sql]) + ")")
+                else:
+                    clauses.append("(" + " OR ".join(
+                        [item[0] for item in constraint_sql]) + ")")
+                args += [item[1] for item in constraint_sql]
+            elif len(v) == 1:
+                constraint_sql = get_constraint_sql(k, v[0], mode, neg)
+                if constraint_sql:
+                    clauses.append(constraint_sql[0])
+                    args.append(constraint_sql[1])
+
+        clauses = filter(None, clauses)
         if condition != "":
             condition = "WHERE " + condition + " "
+            
+            if clauses:
+                condition += "AND "
+                condition += (" AND ".join(clauses))
+        else:
+            if clauses:
+                condition = "WHERE " + (" AND ".join(clauses))
 
         sql = ("SELECT id, type, summary, owner, t.description, status, a.value, c.value, cmp.value, milestone, component "
                 "FROM ticket t "
                 "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
                 "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
                 "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                "%sORDER by %s , a.value ") % (condition, sorted_field)
-
+                "%s %s ORDER by %s , a.value ") % (custom_join, condition, sorted_field)
+        
         self.log.debug(sql)
-        cursor.execute(sql)
+        cursor.execute(sql, args)
 
         tickets=[]
         for id, type, summary, owner, description, status, due_assign, due_close, complete, milestone, component in cursor:
@@ -201,6 +395,10 @@ class TicketGanttChartPlugin(Component):
         data.update({'tickets':tickets,'milestones':milestones,'components':components})
         data.update({'holidays':holidays,'first_date':first_date,'days_term':days_term})
         data.update({'parse_date':parse_date,'format_date':format_date,'calendar':calendar})
+        data.update({'fields':fields, 'constraints':constraints_data, 'labels':labels, 'modes': modes})
+
+        add_stylesheet(req, 'common/css/report.css')
+        add_script(req, 'common/js/query.js')
 
         return 'gantt.html', data, None
 

@@ -57,11 +57,110 @@
       .tic_todo_bl   {position: absolute; overflow: hidden; background:gray;}
 
       .baseline      {position: absolute; overflow: hidden; border-left: 1px dashed red;}
-      .milestone  {position: absolute; overflow: hidden; background-color: red;}
+      div.milestone  {position: absolute; overflow: hidden; background-color: red;}
     </style>
   </head>
   <body py:with="weekdays = ['月', '火', '水' ,'木', '金', '土', '日']">
-    <form>
+    <form id="query" method="get"
+          py:with="field_names = sorted(fields.iterkeys(), key=lambda name: labels[name].lower())">
+      <fieldset id="filters">
+        <input py:if="'id' in constraints" type="hidden" name="id" value="${constraints['id']}" />
+        <legend class="foldable">${_('Filters')}</legend>
+        <table summary="${_('Query filters')}">
+          <tbody>
+            <tr style="height: 1px"><td colspan="4"></td></tr>
+          </tbody>
+          <py:for each="field_name in field_names" py:with="field = fields[field_name]">
+            <py:for each="constraint_name, constraint in constraints.items()">
+              <tbody py:if="field_name == constraint_name"
+                py:with="multiline = field.type in ('select', 'text', 'textarea')">
+                <py:for each="constraint_idx, constraint_value in enumerate(constraint['values'])">
+                  <tr class="${field_name}" py:if="multiline or constraint_idx == 0">
+                    <py:choose test="constraint_idx">
+                      <py:when test="0">
+                        <th scope="row"><label>$field.label</label></th>
+                        <td py:if="field.type not in ('radio', 'checkbox')" class="mode">
+                          <select name="${field_name}_mode">
+                            <option py:for="mode in modes[field.type]" value="$mode.value"
+                              selected="${mode.value == constraint.mode and 'selected' or None}">$mode.name
+                            </option>
+                          </select>
+                        </td>
+                      </py:when>
+                      <py:otherwise><!--! not the first line of a multiline constraint -->
+                        <th colspan="2"><label>もしくは</label></th>   <!--! FIXME: splited_phrase -->
+                      </py:otherwise>
+                    </py:choose>
+
+                    <td class="filter" colspan="${field.type in ('radio', 'checkbox') and 2 or None}"
+                        py:choose="">
+
+                      <py:when test="field.type == 'select'">
+                        <select name="${constraint_name}">
+                          <option></option>
+                          <option py:for="option in field.options"
+                            selected="${option == constraint_value and 'selected' or None}">$option
+                          </option>
+                        </select>
+                      </py:when>
+
+                      <py:when test="field.type == 'radio'">
+                        <py:for each="option in field.options">
+                          <input type="checkbox" id="${field_name}_$option" name="${field_name}"
+                            value="$option"
+                            checked="${any([(value == option) == (constraint.mode == '')
+                                            for value in constraint['values']]) and 'checked' or None}" />
+                          <label for="${field_name}_$option">${option or 'none'}</label>
+                        </py:for>
+                      </py:when>
+
+                      <py:when test="field.type == 'checkbox'">
+                        <input type="radio" id="${field_name}_on" name="$field_name" value="1"
+                               checked="${constraint.mode != '!' or constraint_value == '1' or None}" />
+                        <label for="${field_name}_on">${_('yes')}</label>
+                        <input type="radio" id="${field_name}_off" name="$field_name" value="0"
+                               checked="${constraint.mode == '!' or constraint_value != '1' or None}" />
+                        <label for="${field_name}_off">${_('no')}</label>
+                      </py:when>
+
+                      <py:when test="field.type in ('text', 'textarea')">
+                        <input type="text" name="${field_name}" value="$constraint_value" size="42" />
+                      </py:when>
+
+                    </td>
+                    <td class="actions"
+                        py:with="rm_idx = multiline and constraint_idx or len(constraint['values']) - 1"><input
+                        type="submit" name="rm_filter_${field_name}${field.type != 'radio' and '_%d' % rm_idx or ''}"
+                        value="-" /></td>
+                  </tr>
+                </py:for>
+              </tbody>
+            </py:for>
+          </py:for>
+
+          <tbody>
+            <tr class="actions">
+              <td class="actions" colspan="4" style="text-align: right">
+                <label for="add_filter">${_('Add filter')}</label>&nbsp;
+                <select id="add_filter">
+                  <option></option>
+                  <option py:for="field_name in field_names" py:with="field = fields[field_name]"
+                          value="$field_name"
+                          disabled="${(field.type == 'radio' and
+                                       field_name in constraints and
+                                       len(constraints[field_name])) or None}">
+                    ${field.label}
+                  </option>
+                </select>
+                <input type="submit" name="add" value="+" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="buttons">
+          <input type="submit" value="${_('Update')}" />
+        </div>
+      </fieldset>
       <fieldset id="options">
         <legend class="foldable">設定</legend>
         <table class="list">
@@ -134,6 +233,27 @@
         </tr>
       </table>
     </form>
+    <script type="text/javascript">
+      var properties={
+      <py:for each="(field_name, field), sep in separated(fields.iteritems())">
+        $field_name: { type: "${javascript_quote(field.type)}", label: "${javascript_quote(field.label)}", name: "${javascript_quote(field.name)}"
+        <py:if test="'options' in field">, options: [
+          <py:for each="option, sep in separated(field.options)">"${javascript_quote(option)}"$sep
+          </py:for>]
+        </py:if>}$sep
+      </py:for>
+      };
+      var modes = {
+      <py:for each="(type_name, type_modes), sep in separated(modes.iteritems())">
+        $type_name: [
+        <py:for each="mode, sep in separated(type_modes)">
+          {text: "${javascript_quote(mode.name)}", value: "${javascript_quote(mode.value)}"}$sep
+        </py:for>
+          ]$sep
+      </py:for>
+      };
+      initializeFilters();
+    </script>
     <!-- gantt -->
     <div style="position:relative;left:1px;top:1px;width:100%;height:${maxtic*px_ti+px_hd+1+40}px;">
       <!-- right side -->

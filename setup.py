@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 setup(
-    name='TracGanttCalendarPlugin', version='0.3',
+    name='TracGanttCalendarPlugin', version='0.4',
     packages=find_packages(exclude=['*.tests*']),
 
     author = "Takashi Okamoto",
@@ -17,7 +17,7 @@ setup(
         ganttcalendar.complete_by_close = ganttcalendar.complete_by_close
         ganttcalendar.admin = ganttcalendar.admin
     """,
-    package_data={'ganttcalendar': ['templates/*.html','htdocs/img/*']},
+    package_data={'ganttcalendar': ['templates/*.html','htdocs/img/*','htdocs/js/*']},
 )
 
 #        ticketcalendar = ticketcalendar

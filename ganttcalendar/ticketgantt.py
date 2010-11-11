@@ -11,6 +11,7 @@ from trac.util.datefmt import to_datetime, format_date, parse_date
 
 from trac.ticket.api import TicketSystem
 from trac.util.translation import _
+from trac import __version__
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -398,7 +399,10 @@ class TicketGanttChartPlugin(Component):
         data.update({'fields':fields, 'constraints':constraints_data, 'labels':labels, 'modes': modes})
 
         add_stylesheet(req, 'common/css/report.css')
-        add_script(req, 'common/js/query.js')
+        if __version__  < '0.12':
+          add_script(req, 'common/js/query.js')
+        else:
+	  add_script(req, 'tc/js/query.js')
 
         return 'gantt.html', data, None
 

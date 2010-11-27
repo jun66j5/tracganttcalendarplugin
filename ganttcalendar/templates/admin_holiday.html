@@ -6,21 +6,29 @@
       xmlns:py="http://genshi.edgewall.org/">
   <xi:include href="admin.html" />
   <head>
-    <title>祝日</title>
+    <title>${_('Holidays')}</title>
   </head>
 
   <body>
-    <h2>祝日設定</h2>
+    <h2>${_('Holiday Setting')}</h2>
     <py:if test="tbl_chk">
-      <form class="addnew" id="addcomponent" method="post" action="">
+      <form class="addnew" method="post" action="">
         <fieldset>
-          <legend>祝日を追加します:</legend>
+          <legend>${_('Add Holiday')}<span/>:</legend>
           <div class="field">
-            <label>日付:<br /><input type="text" name="date" /></label>
+            <label>${_('date')}<span/>:<br /><input type="text" name="date" /></label>
           </div>
-            <label>詳細:<br /><input type="text" name="description" /></label>
+            <label>${_('description')}<span/>:<br /><input type="text" name="description" /></label>
           <div class="buttons">
-            <input type="submit" name="add" value="追加"/>
+            <input type="submit" name="add" value="${_('submit')}"/>
+          </div>
+        </fieldset>
+      </form>
+      <form class="addnew" method="post" action="">
+        <fieldset>
+          <legend>${_('Drop table')}<span/>:</legend>
+          <div class="buttons">
+            <input type="submit" name="drop_table" value="${_('DROP holiday table.')}"/>
           </div>
         </fieldset>
       </form>
@@ -29,8 +37,8 @@
         <table class="listing">
           <thead>
             <th class="sel">&nbsp;</th>
-            <th>日付</th>
-            <th>詳細</th>
+            <th>${_('date')}</th>
+            <th>${_('description')}</th>
           </thead>
           <tr py:for="m in holidays">
             <td class="sel"><input type="checkbox" name="sel" value="${m.get('date','')}" /></td>
@@ -46,11 +54,11 @@
       </form>
     </py:if>
     <py:if test= "not tbl_chk">
-      <form class="addnew" id="addcomponent" method="post" action="">
+      <form class="addnew"  method="post" action="">
         <fieldset>
-          <legend>祝日を追加します:</legend>
+          <legend>${_('Add Holiday')}<span/>:</legend>
           <div class="buttons">
-            <input type="submit" name="create_table" value="テーブルを作成し、いくつかの祝日を設定します"/>
+            <input type="submit" name="create_table" value="${_('Create table and insert some holidays.')}"/>
           </div>
         </fieldset>
       </form>

@@ -66,7 +66,7 @@
 
 
       .ticket {
-        font-size: 9px;
+        font-size: 10px;
       }
 
 
@@ -96,8 +96,8 @@
         border:1px solid #555;
         background-color: #ffe;
         font-size: 8pt;
-        width: 400px;
         padding: 3px;
+        /*IE6 Hack*/ min-width: 400px; width: auto; _width: 400px;
       }
 
       .tip:hover span.popup{
@@ -110,20 +110,23 @@
   <body>
     <form>
       <fieldset id="options">
-        <legend class="foldable">設定</legend>
+        <legend class="foldable">${_('Options')}</legend>
         <table class="list">
           <tr>
             <td>
             </td>
             <td>
-              マイルストーン
+              ${_('Milestone')}
               <select name="selected_milestone">
                 <option py:for="m in milestones" value="${m.name}" selected="${selected_milestone==m.name or None}">${m.name}</option>
               </select>
-              <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />自分のチケットのみ表示
+              <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket"
+              />${_('Show only my tickets')}
+              <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket"
+              />${_('Include closed tickets')}
             </td>
             <td align="right">
-              <input type="submit" value="更新" />
+              <input type="submit" value="${_('Update')}" />
             </td>
           </tr>
         </table>
@@ -131,7 +134,7 @@
       <table class="list">
         <tr>
           <td>
-            <input type="button" value="&lt;&lt;${prev.month}月" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
+            <input type="button" value="&lt;&lt; ${prev.month}${_('Month')}" ACCESSKEY="J" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
           </td>
           <td align="center">
             <select name="year">
@@ -139,32 +142,33 @@
                      value="$y"
                      selected="${y==current.year or None}">$y</option>
             </select>
-            年
+            ${_('Month')}
             <select name="month">
               <option py:for="m in [1,2,3,4,5,6,7,8,9,10,11,12]"
                      value="$m" selected="${m==current.month or None}">$m</option>
             </select>
-            月
-            <input type="submit" value="更新" />
+            ${_('Year')}
+            <input type="submit" value="${_('Update')}" />
+            <label ACCESSKEY="M" onclick="form.year.value = ${date.today().year}; form.month.value = ${date.today().month}; form.submit();"/>
           </td>
           <td align="right">
-            <input type="button" value="${next.month}月&gt;&gt;" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
+            <input type="button" value="${next.month}${_('Month')} &gt;&gt;" ACCESSKEY="L" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
           </td>
         </tr>
       </table>
     </form>
-
+    <table py:if="sum_estimatedhours != None" class="list">
+      <div style="font-size:11px;">&nbsp; ${_('Total Hours')}: ${sum_totalhours}h &nbsp;/&nbsp;
+      ${_('Estimated Hours')}: ${sum_estimatedhours}h</div>
+    </table>
     <table class="list with-cells">
       <thead>
-        <tr>
-          <th></th>
-          <th style="width: 14%;">日曜日</th>
-          <th style="width: 14%;">月曜日</th>
-          <th style="width: 14%;">火曜日</th>
-          <th style="width: 14%;">水曜日</th>
-          <th style="width: 14%;">木曜日</th>
-          <th style="width: 14%;">金曜日</th>
-          <th style="width: 14%;">土曜日</th>
+        <tr py:with="weekdays = [_('Monday'), _('Tuesday'), _('Wednesday'),
+        _('Thursday'), _('Friday'), _('Saturday'), _('Sunday')]">
+            <th></th>
+          <py:for each="d in range(7)" py:with="mday= first+ timedelta(d);wk=mday.weekday();">
+            <th style="width: 14%;">${weekdays[wk]}</th>
+          </py:for>
         </tr>
       </thead>
 
@@ -178,26 +182,37 @@
             <div class="ticket" py:with="t=tickets[days[mday]['ticket'][c]['num']]">
               <a class="tip" href="${req.href.ticket()}/${t['id']}">
                 <img src="${href.chrome('tc/img/arrow_'+days[mday]['ticket'][c]['img']+'.png')}" alt="+" />
-                <span class="type">${t['type']}</span><s py:strip="t['status']!='closed'">#${t['id']}:${t['summary']}</s>
+                <s py:strip="t['status']!='closed'"><span class="type">${t['type']}</span>#${t['id']}</s>:${t['summary']}
                 <span class="popup">
-                  <pre><span class="type">${t['type']}</span>#${t['id']}: ${t['summary']}</pre>
-                  <strong>担当者</strong>: ${format_author(t['owner'])}<br />
-                  <strong>開始日</strong>: <span py:if="t['due_assign'] != None">${format_date(parse_date(t['due_assign'].isoformat()))}</span><br />
-                  <strong>終了日</strong>: <span py:if="t['due_close'] != None">${format_date(parse_date(t['due_close'].isoformat()))}</span><br />
-                  <strong>詳細</strong>: <pre>${t['description']}</pre>
+                  <br />
+                  <s py:strip="t['status']!='closed'">  ${t['type']}#${t['id']}</s>: ${t['summary']}<br />
+                  <br />
+                  <strong>${_('Start date')}</strong>:      <span py:if="t['due_assign'] != None">${t['due_assign'].strftime(dateFormat)}</span>
+                    <span py:if="t['status']!='closed'">(${t['status']} ${t['complete']}%)</span><br/>
+                  <strong>${_('End date')}</strong>:            <span py:if="t['due_close'] != None">${t['due_close'].strftime(dateFormat)}</span>
+                    <span py:if="t['status']=='closed'">(${t['status']}: ${t['resolution']})</span><br/>
+                  <strong>${_('Owner')}</strong>:      ${format_author(t['owner'])}<br />
+                  <strong>${_('Priority')}</strong>:            ${t['priority']}<br/>
+                <py:if test="t['estimatedhours']!=None">
+                  <strong>${_('Total Hours')}</strong>: ${t['totalhours']}h &nbsp;/&nbsp;
+                  <strong>${_('Estimated Hours')}</strong>: ${t['estimatedhours']}h<br/>
+                </py:if>
+                  <pre> ${t['description']}</pre>
                 </span>
               </a>
             </div>
             </py:for>
 
-            <py:for each="c in range(len(days[mday]['milestone']))">
+            <py:for each="c in range(len(days[mday]['milestone']))" py:if="'MILESTONE_VIEW' in req.perm">
               <div class="ticket" py:with="m=milestones[days[mday]['milestone'][c]]">
                   <a class="tip" href="${req.href.milestone()}/${m['name']}">
                     <s py:strip="m['completed']!=True"><img src="${href.chrome('tc/img/package.png')}" />${m['name']}</s>
                     <span class="popup">
-                      ${m['name']}<br />
-                      <strong>期限</strong>: ${format_date(parse_date(m['due'].isoformat()))}<br />
-                      <strong>詳細</strong>: ${m['description']}<br />
+                      <br />
+                      <img src="${href.chrome('tc/img/package.png')}" />${m['name']}<br />
+                      <br />
+                      <strong>${_('End date')}</strong>: ${m['due'].strftime(dateFormat)}<br />
+                      <pre> ${m['description']}</pre>
                     </span>
                   </a>
               </div>

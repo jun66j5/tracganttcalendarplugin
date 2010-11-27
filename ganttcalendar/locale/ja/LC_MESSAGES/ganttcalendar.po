@@ -243,12 +243,6 @@ msgstr "チケットの概要を表示"
 msgid "Show ticket status"
 msgstr "チケットのステータスを表示"
 
-#: ganttcalendar/templates/gantt.html:247
-#: ganttcalendar/templates/gantt.html:260
-#: ganttcalendar/templates/gantt.html:276
-msgid "Month"
-msgstr "月"
-
 #: ganttcalendar/templates/gantt.html:255
 msgid "Year"
 msgstr "年"
@@ -360,3 +354,39 @@ msgstr "'%s'は不正な値です。0-100の間の整数値を入力してくだ
 
 msgid "Progress"
 msgstr "進捗率"
+
+msgid "January"
+msgstr "1月"
+
+msgid "February"
+msgstr "2月"
+
+msgid "March"
+msgstr "3月"
+
+msgid "April"
+msgstr "4月"
+
+msgid "May"
+msgstr "5月"
+
+msgid "June"
+msgstr "6月"
+
+msgid "July"
+msgstr "7月"
+
+msgid "August"
+msgstr "8月"
+
+msgid "September"
+msgstr "9月"
+
+msgid "October"
+msgstr "10月"
+
+msgid "November"
+msgstr "11月"
+
+msgid "December"
+msgstr "12月"

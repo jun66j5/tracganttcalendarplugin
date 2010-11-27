@@ -18,6 +18,20 @@ from trac.util import Ranges
 _, tag_, N_, add_domain = domain_functions('ganttcalendar', 
     '_', 'tag_', 'N_', 'add_domain')
 
+month_tbl = {
+  1: 'January',
+  2: 'February',
+  3: 'March',
+  4: 'April',
+  5: 'May',
+  6: 'June',
+  7: 'July',
+  8: 'August',
+  9: 'September',
+  10: 'October',
+  11: 'November',
+  12: 'December'
+}
 
 class TicketCalendarPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -213,7 +227,7 @@ class TicketCalendarPlugin(Component):
                 'tickets':tickets, 'milestones':milestones,'days':days,
                 'sum_estimatedhours':sum_estimatedhours, 'sum_totalhours':sum_totalhours,
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_milestone': selected_milestone,
-                '_':_,'dateFormat':dateFormat, 'holidays':holidays}
+                '_':_,'dateFormat':dateFormat, 'holidays':holidays, 'month_tbl': month_tbl}
 
         return 'calendar.html', data, None
 

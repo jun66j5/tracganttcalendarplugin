@@ -23,6 +23,20 @@ from trac.util import Ranges
 _, tag_, N_, add_domain = domain_functions('ganttcalendar', 
     '_', 'tag_', 'N_', 'add_domain')
 
+month_tbl = {
+  1: 'January',
+  2: 'February',
+  3: 'March',
+  4: 'April',
+  5: 'May',
+  6: 'June',
+  7: 'July',
+  8: 'August',
+  9: 'September',
+  10: 'October',
+  11: 'November',
+  12: 'December'
+}
 
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
@@ -619,7 +633,7 @@ class TicketGanttChartPlugin(Component):
         except:
             pass
 
-        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth}
+        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'month_tbl': month_tbl}
         data.update({'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field})
         data.update({'show_ticket_summary': show_ticket_summary, 'show_ticket_status': show_ticket_status, 'ti_mrgn': ticket_margin})
         data.update({'selected_milestone':selected_milestone,'selected_component': selected_component})

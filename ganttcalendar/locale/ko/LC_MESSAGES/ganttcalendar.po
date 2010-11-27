@@ -271,12 +271,6 @@ msgstr "티켓 제목 표시"
 msgid "Show ticket status"
 msgstr "티켓 상태 표시"
 
-#: ganttcalendar/templates/gantt.html:247
-#: ganttcalendar/templates/gantt.html:260
-#: ganttcalendar/templates/gantt.html:276
-msgid "Month"
-msgstr "월"
-
 #: ganttcalendar/templates/gantt.html:255
 msgid "Year"
 msgstr "년"
@@ -388,3 +382,40 @@ msgstr "'%s' 은 잘못된 입력값 입니다. 0 ~ 100 사이의 정수값을 �
 
 msgid "Progress"
 msgstr "진척율"
+
+msgid "January"
+msgstr "1월"
+
+msgid "February"
+msgstr "2월"
+
+msgid "March"
+msgstr "3월"
+
+msgid "April"
+msgstr "4월"
+
+msgid "May"
+msgstr "5월"
+
+msgid "June"
+msgstr "6월"
+
+msgid "July"
+msgstr "7월"
+
+msgid "August"
+msgstr "8월"
+
+msgid "September"
+msgstr "9월"
+
+msgid "October"
+msgstr "10월"
+
+msgid "November"
+msgstr "11월"
+
+msgid "December"
+msgstr "12월"
+

@@ -109,38 +109,6 @@ msgstr ""
 msgid "Create table and insert some holidays."
 msgstr ""
 
-#: ganttcalendar/templates/calendar.html:113
-msgid "설정"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:118
-msgid "마일스톤"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:123
-msgid "자신의 티켓만 조회"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:124
-msgid "close한 티켓 포함"
-msgstr "close한 티켓 포함"
-
-#: ganttcalendar/templates/calendar.html:142
-msgid "년"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:147
-msgid "월"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:159
-msgid "소요시간 합계:"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:159
-msgid "h  /  추정시간 합계:"
-msgstr ""
-
 #: ganttcalendar/templates/calendar.html:159
 #: ganttcalendar/templates/calendar.html:193
 #: ganttcalendar/templates/gantt.html:337
@@ -289,12 +257,12 @@ msgstr "축소"
 
 #: ganttcalendar/templates/gantt.html:282
 msgid "Total Hours"
-msgstr "소요시간 합계"
+msgstr "소요시간"
 
 #: ganttcalendar/templates/gantt.html:282
 #: ganttcalendar/templates/gantt.html:403
 msgid "Estimated Hours"
-msgstr "추정시간 합계"
+msgstr "추정시간"
 
 #: ganttcalendar/templates/gantt.html:378
 #: ganttcalendar/templates/gantt.html:400
@@ -369,10 +337,10 @@ msgid "'%s' is invalid date format. Please input format as %s."
 msgstr "'%s' 은 잘못된 날짜 형식입니다. %s 형식으로 입력해 주십시오."
 
 msgid  "Start date"
-msgstr "완료기한"
+msgstr "시작일"
 
 msgid  "End date"
-msgstr "시작일"
+msgstr "완료기한"
 
 msgid "%s '%s' must be after %s '%s'."
 msgstr "%s '%s' 은 %s '%s' 보다 이전일 수 없습니다."
@@ -418,4 +386,3 @@ msgstr "11월"
 
 msgid "December"
 msgstr "12월"
-

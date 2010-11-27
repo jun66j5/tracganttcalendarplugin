@@ -330,7 +330,7 @@
         <py:with vars="tic_due='(%d/%d ~ %d/%d)' % (t['due_assign'].month, t['due_assign'].day, t['due_close'].month, t['due_close'].day );
                        tic_tip='%s#%d: %s - %s %s%s' % (t['type'], t['id'], t['summary'], format_author(t['owner']), tic_due, (t['estimatedhours']!=None and ' '+ str(t['estimatedhours']) +'h' or '') );">
           <div py:if="show_ticket_summary == 'on'" py:attrs="{'title':
-                       _('Ticket') + ':  %s' % (t['description'] )}" class="tic_summary" style="left:${int(s*px_dw+1)+2}px;top:${px_ti*cnt+px_hd+(px_ti-px_ch)/2+(ti_mrgn/2+1)}px;">
+                       _('Description') + ':  %s' % (t['description'] )}" class="tic_summary" style="left:${int(s*px_dw+1)+2}px;top:${px_ti*cnt+px_hd+(px_ti-px_ch)/2+(ti_mrgn/2+1)}px;">
             <a href="${req.href.ticket()}/${t['id']}">
               <s py:strip="t['status']!='closed'">${t['type']}#${t['id']}</s>: ${t['summary'][0:20]}<span py:if="len(t['summary'])>20">...</span>
               ${tic_due}<span py:if="t['estimatedhours']!=None"> ${t['estimatedhours']}h</span>
@@ -420,7 +420,7 @@
                     <br/>
                     <img src="${href.chrome('tc/img/package.png')}" />${t['milestone']}<br/>
                     <br/>
-                    <strong>${_('End date')}</strong>: <span py:if="m['due'] !=
+                    <strong>${_('Due')}</strong>: <span py:if="m['due'] !=
                     None">${m['due'].strftime(dateFormat)}</span><br/>
                     <pre> ${m['description']}</pre>
                   </span>

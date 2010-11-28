@@ -142,11 +142,11 @@
                      value="$y"
                      selected="${y==current.year or None}">$y</option>
             </select>
+            ${_('Year')}
             <select name="month">
               <option py:for="m in [1,2,3,4,5,6,7,8,9,10,11,12]"
                      value="$m" selected="${m==current.month or None}">${_(month_tbl[m])}</option>
             </select>
-            ${_('Year')}
             <input type="submit" value="${_('Update')}" />
             <label ACCESSKEY="M" onclick="form.year.value = ${date.today().year}; form.month.value = ${date.today().month}; form.submit();"/>
           </td>

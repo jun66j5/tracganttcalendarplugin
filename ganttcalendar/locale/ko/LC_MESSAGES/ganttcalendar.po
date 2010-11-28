@@ -21,67 +21,58 @@ msgstr ""
 #: ganttcalendar/admin.py:34
 #, python-format
 msgid "Holiday %(date)s already exists."
-msgstr ""
+msgstr "%(date)s 은 이미 휴일로 등록되어 있습니다."
 
 #: ganttcalendar/admin.py:43
 msgid "No holiday selected"
-msgstr ""
+msgstr "선택한 휴일이 없습니다."
 
 #: ganttcalendar/ticketgantt.py:157
 msgid "Gantt chart"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:408
-#, python-format
-msgid "Invalid ticket id list: %(value)s"
-msgstr ""
+msgstr "간트 차트"
 
 #: ganttcalendar/templates/admin_holiday.html:9
 msgid "Holidays"
-msgstr ""
+msgstr "휴일"
 
 #: ganttcalendar/templates/admin_holiday.html:13
 msgid "Holiday Setting"
-msgstr ""
-
-#: ganttcalendar/admin.py:43
-msgid "No holiday selected"
-msgstr ""
+msgstr "휴일 설정"
 
 #: ganttcalendar/templates/admin_holiday.html:17
 #: ganttcalendar/templates/admin_holiday.html:59
 msgid "Add Holiday"
-msgstr ""
+msgstr "휴일 추가"
 
 #: ganttcalendar/templates/admin_holiday.html:19
 #: ganttcalendar/templates/admin_holiday.html:40
 msgid "date"
-msgstr ""
+msgstr "날짜"
 
 #: ganttcalendar/templates/admin_holiday.html:21
 #: ganttcalendar/templates/admin_holiday.html:41
 msgid "description"
-msgstr ""
+msgstr "설명"
 
 #: ganttcalendar/templates/admin_holiday.html:23
 msgid "submit"
-msgstr ""
+msgstr "추가"
 
 #: ganttcalendar/templates/admin_holiday.html:29
 msgid "Drop table"
-msgstr ""
+msgstr "테이블 삭제"
 
 #: ganttcalendar/templates/admin_holiday.html:31
 msgid "DROP holiday table."
-msgstr ""
+msgstr "휴일 테이블을 삭제합니다"
 
 #: ganttcalendar/templates/admin_holiday.html:50
 msgid "Remove selected items"
-msgstr ""
+msgstr "선택한 휴일 삭제하기"
 
 #: ganttcalendar/templates/admin_holiday.html:61
 msgid "Create table and insert some holidays."
-msgstr ""
+msgstr "테이블을 생성하고, 기본 휴일을 추가합니다"
 
 #: ganttcalendar/templates/gantt.html:194
 msgid "Options"
@@ -192,7 +183,7 @@ msgid "Su"
 msgstr "일"
 
 msgid "Calendar"
-msgstr ""
+msgstr "캘린더"
 
 msgid "The resolutions to change the ticket progress to 100% when ticket closed."
 msgstr "티켓을 close할 때, 진척율을 100%로 자동 변경할 해결방법들(Resolutions)을 설정합니다."

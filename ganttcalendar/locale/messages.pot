@@ -31,21 +31,12 @@ msgstr ""
 msgid "Gantt chart"
 msgstr ""
 
-#: ganttcalendar/ticketgantt.py:408
-#, python-format
-msgid "Invalid ticket id list: %(value)s"
-msgstr ""
-
 #: ganttcalendar/templates/admin_holiday.html:9
 msgid "Holidays"
 msgstr ""
 
 #: ganttcalendar/templates/admin_holiday.html:13
 msgid "Holiday Setting"
-msgstr ""
-
-#: ganttcalendar/admin.py:43
-msgid "No holiday selected"
 msgstr ""
 
 #: ganttcalendar/templates/admin_holiday.html:17

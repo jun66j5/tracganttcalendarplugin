@@ -31,11 +31,6 @@ msgstr "祝日が選択されていません"
 msgid "Gantt chart"
 msgstr "ガントチャート"
 
-#: ganttcalendar/ticketgantt.py:408
-#, python-format
-msgid "Invalid ticket id list: %(value)s"
-msgstr "不正なチケットID: %(value)s\""
-
 #: ganttcalendar/templates/admin_holiday.html:9
 msgid "Holidays"
 msgstr "休日"
@@ -43,10 +38,6 @@ msgstr "休日"
 #: ganttcalendar/templates/admin_holiday.html:13
 msgid "Holiday Setting"
 msgstr "休日の設定"
-
-#: ganttcalendar/admin.py:43
-msgid "No holiday selected"
-msgstr "休日が選択されていません"
 
 #: ganttcalendar/templates/admin_holiday.html:17
 #: ganttcalendar/templates/admin_holiday.html:59

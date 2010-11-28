@@ -47,7 +47,7 @@ class TicketValidator(Component):
                 except( TracError, ValueError, TypeError):
                     dueDate[field]       = None
                     label = self.config['ticket-custom'].get(field+'.label', default='')
-                    errors.append(( u"%s(%s)" % (label, field), _("'%s' is invalid date format. Please input format as '%s'.") % (due, dateFormat) ))
+                    errors.append(( u"%s(%s)" % (label, field), _("'%s' is invalid date format. Please input format as %s.") % (due, dateFormat) ))
 
         if (dueDate['due_assign'] and dueDate['due_close']) \
           and (dueDate['due_assign'] > dueDate['due_close']):

@@ -200,8 +200,8 @@ msgstr "チケットをクローズしたときに進捗率を100%にする解�
 msgid "Field define progress value for ticket."
 msgstr "進捗率を定義したフィールド"
 
-msgid "'%s' is invalid date format. Please input format as '%s'."
-msgstr "'%s は不正な日付フォーマットです。フォーマットは%sで入力してください。"
+msgid "'%s' is invalid date format. Please input format as %s."
+msgstr "'%s'は不正な日付フォーマットです。フォーマットは%sで入力してください。"
 
 msgid "%s '%s' must be after %s '%s'."
 msgstr "%s '%s'は%s '%s'の後に設定してください。"

@@ -27,38 +27,8 @@ msgstr ""
 msgid "No holiday selected"
 msgstr ""
 
-#: ganttcalendar/ticketgantt.py:130 ganttcalendar/ticketgantt.py:138
-msgid "contains"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:131 ganttcalendar/ticketgantt.py:139
-msgid "doesn't contain"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:132
-msgid "begins with"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:133
-msgid "ends with"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:134 ganttcalendar/ticketgantt.py:142
-#: ganttcalendar/ticketgantt.py:146
-msgid "is"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:135 ganttcalendar/ticketgantt.py:143
-#: ganttcalendar/ticketgantt.py:147
-msgid "is not"
-msgstr ""
-
 #: ganttcalendar/ticketgantt.py:157
 msgid "Gantt chart"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:295 ganttcalendar/templates/gantt.html:377
-msgid "Ticket"
 msgstr ""
 
 #: ganttcalendar/ticketgantt.py:408
@@ -72,6 +42,10 @@ msgstr ""
 
 #: ganttcalendar/templates/admin_holiday.html:13
 msgid "Holiday Setting"
+msgstr ""
+
+#: ganttcalendar/admin.py:43
+msgid "No holiday selected"
 msgstr ""
 
 #: ganttcalendar/templates/admin_holiday.html:17
@@ -109,88 +83,6 @@ msgstr ""
 msgid "Create table and insert some holidays."
 msgstr ""
 
-#: ganttcalendar/templates/calendar.html:159
-#: ganttcalendar/templates/calendar.html:193
-#: ganttcalendar/templates/gantt.html:337
-#: ganttcalendar/templates/gantt.html:341
-#: ganttcalendar/templates/gantt.html:403
-msgid "h"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:180
-msgid "+"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:186
-msgid "시작일"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:188
-msgid "완료기한"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:190
-msgid "담당자"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:191
-msgid "우선순위"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-msgid "소요시간"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-#: ganttcalendar/templates/gantt.html:282
-#: ganttcalendar/templates/gantt.html:403
-msgid "h  /"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-msgid "추정시간"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:209
-msgid "완료 기한"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:72
-msgid "Filters"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:73
-msgid "Query filters"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:79 ganttcalendar/templates/gantt.html:177
-msgid "Or"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:107
-msgid "or"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:136
-msgid "yes"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:139
-msgid "no"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:149
-msgid ""
-"[1:between]\n"
-"                          [2:]\n"
-"                          [3:and]\n"
-"                          [4:]"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:163
-msgid "And"
-msgstr ""
-
 #: ganttcalendar/templates/gantt.html:194
 msgid "Options"
 msgstr "설정"
@@ -203,25 +95,9 @@ msgstr "기준일"
 msgid "Sort by"
 msgstr "정렬기준"
 
-#: ganttcalendar/templates/gantt.html:207
-#: ganttcalendar/templates/gantt.html:214
-#: ganttcalendar/templates/gantt.html:374
-msgid "Milestone"
-msgstr "마일스톤"
-
-#: ganttcalendar/templates/gantt.html:208
-#: ganttcalendar/templates/gantt.html:221
-#: ganttcalendar/templates/gantt.html:374
-msgid "Component"
-msgstr "컴포넌트"
-
 #: ganttcalendar/templates/gantt.html:214
 msgid "Selected"
 msgstr "조회대상"
-
-#: ganttcalendar/templates/gantt.html:219
-msgid "AND"
-msgstr ""
 
 #: ganttcalendar/templates/gantt.html:231
 msgid "Show only my tickets"
@@ -264,11 +140,6 @@ msgstr "소요시간"
 msgid "Estimated Hours"
 msgstr "추정시간"
 
-#: ganttcalendar/templates/gantt.html:378
-#: ganttcalendar/templates/gantt.html:400
-msgid "Owner"
-msgstr "담당자"
-
 #: ganttcalendar/templates/gantt.html:394
 msgid "Start date"
 msgstr "시작일"
@@ -277,10 +148,6 @@ msgstr "시작일"
 #: ganttcalendar/templates/gantt.html:424
 msgid "End date"
 msgstr "완료기한"
-
-#: ganttcalendar/templates/gantt.html:401
-msgid "Priority"
-msgstr "우선순위"
 
 msgid "Monday"
 msgstr "월요일"
@@ -335,12 +202,6 @@ msgstr "진척율(complete) 설정 필드"
 
 msgid "'%s' is invalid date format. Please input format as %s."
 msgstr "'%s' 은 잘못된 날짜 형식입니다. %s 형식으로 입력해 주십시오."
-
-msgid  "Start date"
-msgstr "시작일"
-
-msgid  "End date"
-msgstr "완료기한"
 
 msgid "%s '%s' must be after %s '%s'."
 msgstr "%s '%s' 은 %s '%s' 보다 이전일 수 없습니다."

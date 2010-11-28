@@ -27,39 +27,9 @@ msgstr "祝日 %(date)s はすでに定義済みです"
 msgid "No holiday selected"
 msgstr "祝日が選択されていません"
 
-#: ganttcalendar/ticketgantt.py:130 ganttcalendar/ticketgantt.py:138
-msgid "contains"
-msgstr "含む"
-
-#: ganttcalendar/ticketgantt.py:131 ganttcalendar/ticketgantt.py:139
-msgid "doesn't contain"
-msgstr "含まない"
-
-#: ganttcalendar/ticketgantt.py:132
-msgid "begins with"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:133
-msgid "ends with"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:134 ganttcalendar/ticketgantt.py:142
-#: ganttcalendar/ticketgantt.py:146
-msgid "is"
-msgstr ""
-
-#: ganttcalendar/ticketgantt.py:135 ganttcalendar/ticketgantt.py:143
-#: ganttcalendar/ticketgantt.py:147
-msgid "is not"
-msgstr ""
-
 #: ganttcalendar/ticketgantt.py:157
 msgid "Gantt chart"
 msgstr "ガントチャート"
-
-#: ganttcalendar/ticketgantt.py:295 ganttcalendar/templates/gantt.html:377
-msgid "Ticket"
-msgstr "チケット"
 
 #: ganttcalendar/ticketgantt.py:408
 #, python-format
@@ -113,88 +83,6 @@ msgstr "選択された項目を削除"
 msgid "Create table and insert some holidays."
 msgstr "テーブルの作成とデフォルトの休日の設定"
 
-#: ganttcalendar/templates/calendar.html:159
-#: ganttcalendar/templates/calendar.html:193
-#: ganttcalendar/templates/gantt.html:337
-#: ganttcalendar/templates/gantt.html:341
-#: ganttcalendar/templates/gantt.html:403
-msgid "h"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:180
-msgid "+"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:186
-msgid "시작일"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:188
-msgid "완료기한"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:190
-msgid "담당자"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:191
-msgid "우선순위"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-msgid "소요시간"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-#: ganttcalendar/templates/gantt.html:282
-#: ganttcalendar/templates/gantt.html:403
-msgid "h  /"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:193
-msgid "추정시간"
-msgstr ""
-
-#: ganttcalendar/templates/calendar.html:209
-msgid "완료 기한"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:72
-msgid "Filters"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:73
-msgid "Query filters"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:79 ganttcalendar/templates/gantt.html:177
-msgid "Or"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:107
-msgid "or"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:136
-msgid "yes"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:139
-msgid "no"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:149
-msgid ""
-"[1:between]\n"
-"                          [2:]\n"
-"                          [3:and]\n"
-"                          [4:]"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:163
-msgid "And"
-msgstr ""
-
 #: ganttcalendar/templates/gantt.html:194
 msgid "Options"
 msgstr "設定"
@@ -207,24 +95,8 @@ msgstr "基準日"
 msgid "Sort by"
 msgstr "ソートするフィールド"
 
-#: ganttcalendar/templates/gantt.html:207
-#: ganttcalendar/templates/gantt.html:214
-#: ganttcalendar/templates/gantt.html:374
-msgid "Milestone"
-msgstr "マイルストーン"
-
-#: ganttcalendar/templates/gantt.html:208
-#: ganttcalendar/templates/gantt.html:221
-#: ganttcalendar/templates/gantt.html:374
-msgid "Component"
-msgstr "コンポーネント"
-
 #: ganttcalendar/templates/gantt.html:214
 msgid "選択条件"
-msgstr ""
-
-#: ganttcalendar/templates/gantt.html:219
-msgid "AND"
 msgstr ""
 
 #: ganttcalendar/templates/gantt.html:231
@@ -268,11 +140,6 @@ msgstr "作業時間"
 msgid "Estimated Hours"
 msgstr "予定工数"
 
-#: ganttcalendar/templates/gantt.html:378
-#: ganttcalendar/templates/gantt.html:400
-msgid "Owner"
-msgstr "担当者"
-
 #: ganttcalendar/templates/gantt.html:394
 msgid "Start date"
 msgstr "開始日"
@@ -281,10 +148,6 @@ msgstr "開始日"
 #: ganttcalendar/templates/gantt.html:424
 msgid "End date"
 msgstr "完了予定日"
-
-#: ganttcalendar/templates/gantt.html:401
-msgid "Priority"
-msgstr "優先度"
 
 msgid "Monday"
 msgstr "月曜"
@@ -339,12 +202,6 @@ msgstr "進捗率を定義したフィールド"
 
 msgid "'%s' is invalid date format. Please input format as '%s'."
 msgstr "'%s は不正な日付フォーマットです。フォーマットは%sで入力してください。"
-
-msgid  "Start date"
-msgstr "開始予定日"
-
-msgid  "End date"
-msgstr "終了予定日"
 
 msgid "%s '%s' must be after %s '%s'."
 msgstr "%s '%s'は%s '%s'の後に設定してください。"

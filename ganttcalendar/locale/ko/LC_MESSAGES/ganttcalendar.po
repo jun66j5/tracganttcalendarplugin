@@ -152,7 +152,7 @@ msgstr "완료기한"
 msgid "Monday"
 msgstr "월요일"
 
-msgid "Tuesday”
+msgid "Tuesday"
 msgstr "화요일"
 
 msgid "Wednesday"

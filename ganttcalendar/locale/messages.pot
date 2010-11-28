@@ -152,7 +152,7 @@ msgstr ""
 msgid "Monday"
 msgstr ""
 
-msgid "Tuesday¡±
+msgid "Tuesday"
 msgstr ""
 
 msgid "Wednesday"

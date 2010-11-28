@@ -152,7 +152,7 @@ msgstr "完了予定日"
 msgid "Monday"
 msgstr "月曜"
 
-msgid "Tuesday”
+msgid "Tuesday"
 msgstr "火曜"
 
 msgid "Wednesday"

@@ -68,6 +68,6 @@ class TicketValidator(Component):
                 ticket.values[complete_field] = str(n)
             except:
                 label = self.config['ticket-custom'].get(complete_field+'.label', default=_('Progress') )
-                errors.append(_("'%s' is invalid value. It must be integer in the range from 0 to 100.") % complete)
+                errors.append(( u"%s(%s)" % (label, complete_field), _("'%s' is invalid value. It must be integer in the range from 0 to 100.") % complete ))
 
         return errors

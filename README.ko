@@ -1,0 +1,91 @@
+﻿간트캘린더 플러그인 국제화 버전
+
+
+[설명]
+Trac 0.12 에서 티켓의 일정을 간트 차트와 캘린더로 표시해주는 플러그인입니다.
+별도 설정없이 한국어/일본어/영어가 기본 지원되고,
+시스템 로케일에 따라 한국/일본 휴일이 설정 됩니다.
+
+아쉽게도 Trac 0.11 에서는 동작하지 않습니다.
+
+
+[인스톨]
+> python setup.py install
+
+
+인스톨을 한 후 다음과 같이 trac.ini 파일을 수정해야 합니다.
+
+[components]
+ganttcalendar.admin.holidayadminpanel = enabled
+ganttcalendar.complete_by_close.completeticketobserver = enabled
+ganttcalendar.ticketcalendar.ticketcalendarplugin = enabled
+ganttcalendar.ticketgantt.ticketganttchartplugin = enabled
+ganttcalendar.ticketvalidator.ticketvalidator = enabled
+
+[ganttcalendar]
+complete_conditions = fixed, invalid
+default_zoom_mode = 3
+first_day = 0
+show_ticket_summary = false
+
+[ticket-custom]
+complete = select
+complete.label = 진척율 (%)
+complete.options = |0|10|20|30|40|50|60|70|80|90|100
+complete.order = 3
+due_assign = text
+due_assign.label = 시작일
+due_assign.order = 1
+due_close = text
+due_close.label = 완료기한
+due_close.order = 2
+
+변경 가능한 옵션에 대한 설명은 다음과 같습니다.
+
+complete_conditions :
+  티켓을 close할 때, 진척율을 100%로 자동 변경할
+  해결방법들(Resolutions)을 설정합니다.
+
+default_zoom_mode :
+  간트 차트에 기본으로 보여 줄 줌 모드를 1 ~ 6 단계 사이 값 중에서
+  선택하여 설정합니다.
+
+first_day :
+  일요일부터 시작하는 시작 요일을 월요일로 변경하려면 first_day = 1 로 변경합니다.
+  기타 다른 요일로 변경하려면 0 ~ 6 사이 값 중에서 선택하여 설정합니다.
+
+    (0: 일요일, 1: 월요일, 2: 화요일, 3: 수요일, 4: 목요일, 5: 금요일, 6: 토요일)
+
+show_ticket_summary :
+  간트 차트 bar 에 기본으로 티켓 제목을 표시하려면 true 로 설정합니다.
+
+
+[휴일 설정]
+TRAC_ADMIN 권한을 가진 계정으로 로그인하여 휴일 테이블을 생성하면
+2010년 ~ 2015년 한국 휴일이 자동 등록되고 화면에 표시가 됩니다.
+(시스템 로케일이 일본으로 설정된 경우 일본 휴일이 등록 됩니다.)
+
+휴일 테이블 생성 이후에 휴일을 추가/삭제할 수 있으며,
+등록된 휴일은 캘린더와 간트 차트에 표시가 됩니다.
+
+
+[단축키]
+간트 차트와 캘린더 사용의 편의를 위해 단축키가 제공됩니다.
+
+간트 차트 - alt + (shift) + i,j,k,l,m,n
+  상 - zoom in     - alt + i (IE) / alt + shift + i (firefox)
+  하 - zoom out    - alt + k (IE) / alt + shift + k (firefox)
+  좌 - 이전달 이동 - alt + j (IE) / alt + shift + j (firefox)
+  우 - 다음달 이동 - alt + l (IE) / alt + shift + l (firefox)
+  기본 모드 (normal)         - alt + shift + n (firefox) / IE 지원 안함
+  이번달 이동(current month) - alt + shift + m (firefox) / IE 지원 안함
+
+캘린더 - alt + (shift) + j,l,m
+  좌 - 이전달 이동 - alt + j (IE) / alt + shift + j (firefox)
+  우 - 다음달 이동 - alt + l (IE) / alt + shift + l (firefox)
+  이번달 이동 (current month) - alt + shift + m (firefox) / IE 지원 안함
+
+
+
+                                                      2010.11.28
+                                                           Genie.

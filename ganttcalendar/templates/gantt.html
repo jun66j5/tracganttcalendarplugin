@@ -2,7 +2,7 @@
       xmlns:py="http://genshi.edgewall.org/"
       xmlns:i18n="http://genshi.edgewall.org/i18n"
       xmlns:xi="http://www.w3.org/2001/XInclude"
-      py:with="px_ti=25+ti_mrgn;px_hd=46;px_dw=36/zoom;px_ch=10;maxtic=len(tickets);px_left=3;px_top=13;px_height=px_top+px_ch;">
+      py:with="px_ti=30;px_hd=46;px_dw=36/zoom;px_ch=10;maxtic=len(tickets);px_left=3;px_top=13;px_height=px_top+px_ch;">
   <xi:include href="layout.html" />
   <xi:include href="macros.html" />
   <head>
@@ -46,7 +46,7 @@
       .bdy           {position: absolute;background-color: #fff;text-align: left;top:${px_hd}px;height:${maxtic*px_ti+px_height}px;}
       .bdy_elem      {position: absolute;font-size: 10px;left:1px;height:${px_ti-2}px;}
       .tic_summary   {position: absolute;font-size: 10px;color: #000; background-color: #fff; height: 11px; line-height: 11px; white-space:nowrap;}
-      .stripe        {position: absolute; overflow: hidden; background: #f7f7f7;}
+      .stripe        {position: absolute; overflow: hidden; background: #e8f0f8;}
       .tip           {position: static;}
       .tip span.popup{position: absolute;visibility: hidden;background-color: #ffe;color: black;border: 1px solid #555;left: 20px;top: 30px;padding: 3px;
                       /*IE6 Hack*/ min-width: 400px; width: auto; _width: 400px;
@@ -283,7 +283,7 @@
     <!-- gantt -->
     <div style="position:relative;left:1px;top:1px;width:100%;height:${maxtic*px_ti+px_hd+1+40+px_height}px;">
       <!-- right side -->
-      <div style="overflow:auto;margin-left:308px;margin-right:4px;position:relative;left:0px;top:1px;height:${maxtic*px_ti+px_hd+1+30+px_height}px;">
+      <div style="overflow:auto;margin-left:384px;margin-right:4px;position:relative;left:0px;top:1px;height:${maxtic*px_ti+px_hd+1+30+px_height}px;">
         <div class="border_line" style="left:0px;top:1px;width:${px_dw*days_term+1}px;height:${maxtic*px_ti+px_hd+1+px_height}px;">
           <!-- head and sun,sta,holiday -->
           <div class="bdy" style="position:relative;left:1px;top:${px_hd}px;width:${px_dw*days_term-1}px;height:${maxtic*px_ti+px_height}px;"/>
@@ -337,7 +337,7 @@
             </a>
           </div>
           <div py:if="show_ticket_status == 'on'" py:attrs="{'title':tic_tip}" py:choose="" class="tic_summary" style="left:${int(e*px_dw)+5}px;top:${px_ti*cnt+px_hd+(px_ti-px_ch)/2+(ti_mrgn/2-1)+px_top}px;">
-            ${t['status']}<span py:when="t['status']!='closed'"> ${t['complete']}%</span><span py:otherwise="">: ${t['resolution']}</span><span py:if="t['estimatedhours']!=None"> ${t['totalhours']}h</span>
+            ${t['status']}<span py:when="t['status']!='closed'"> ${t['complete']}%</span><span py:otherwise="">: ${t['resolution']}</span><span py:if="t['estimatedhours']!=None"> ${t['totalhours']}h</span> ${t['owner']}
           </div>
         </py:with>
     </py:if>
@@ -367,14 +367,13 @@
         </div>
       </div>
       <!-- left side -->
-      <div style="position:absolute;background-color:gray;left:1px;top:1px;width:304px;height:${maxtic*px_ti+px_hd+1+px_height}px;">
+      <div style="position:absolute;background-color:gray;left:1px;top:1px;width:380px;height:${maxtic*px_ti+px_hd+1+px_height}px;">
         <div py:choose="" class="hdr" style="left:1px;top:1px;width: 89px;height:${px_hd-2}px;">
           <span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">
             <span py:when="sorted_field=='milestone'">${_('Milestone')}</span><span py:otherwise="">${_('Component')}</span>
           </span>
         </div>
-        <div class="hdr" style="left:91px;top:1px;width:104px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">${_('Ticket')}</span></div>
-        <div class="hdr" style="left:196px;top:1px;width:107px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">${_('Owner')}</span></div>
+        <div class="hdr" style="left:91px;top:1px;width:288px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">${_('Ticket')}</span></div>
 
 <py:def function="print_field(px_x,px_w,ticket_col,dupchk=False)">
         <div class="bdy" style="left:${px_x}px;width:${px_w}px;">
@@ -385,10 +384,10 @@
           <div class="stripe" style="top: ${cnt*px_ti+px_top}px;width: ${px_w}px; height: ${px_ti}px;"></div>
         </py:if>
           <div class="bdy_elem" style="top: ${cnt*px_ti+px_top}px;left: ${px_left-1}px;width: ${px_w-2}px;">
-            <a class="tip" href="${req.href.ticket()}/${t['id']}"><s py:strip="t['status']!='closed'">#${t['id']}</s>:${t['summary'][0:14]}<span py:if="len(t['summary'])>14">...</span>
+            <a class="tip" href="${req.href.ticket()}/${t['id']}">${t['type']} <s py:strip="t['status']!='closed'">#${t['id']}</s>: ${t['summary'][0:32]}<span py:if="len(t['summary'])>32">...</span>
               <span class="popup">
                 <br/>
-                <s py:strip="t['status']!='closed'">  ${t['type']}#${t['id']}</s>: ${t['summary']}<br/>
+                <s py:strip="t['status']!='closed'">  ${t['type']} #${t['id']}</s>: ${t['summary']}<br/>
                 <br/>
                 <strong>${_('Start date')}</strong>:
                 ${t['due_assign'].strftime(dateFormat)}
@@ -443,8 +442,7 @@
         </div>
 </py:def>
 
-        ${print_field( 196,107,'owner')}
-        ${print_field(  91,104,'ticket')}
+        ${print_field(  91,288,'ticket')}
         ${print_field(   1, 89,sorted_field,dupchk=True)}
 
       </div>

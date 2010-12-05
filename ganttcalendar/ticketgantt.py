@@ -233,7 +233,7 @@ class TicketGanttChartPlugin(Component):
                 show_ticket_summary = None
 
         if show_ticket_summary:
-            ticket_margin = 5
+            ticket_margin = 12
         else:
             ticket_margin = 0
 

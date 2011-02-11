@@ -1,23 +1,26 @@
 from setuptools import find_packages, setup
 
 extra = {} 
-from trac.util.dist import get_l10n_cmdclass 
+try:
+        from trac.util.dist import get_l10n_cmdclass
+        cmdclass = get_l10n_cmdclass()
+        if cmdclass:
+                print("Got l10n_cmdclass\n")
+                extra['cmdclass'] = cmdclass
+                extractors = [
+                        ('**.py',                'python', None),
+                        ('**/templates/**.html', 'genshi', None),
+                        ('**/templates/**.txt',  'genshi', {
+                                'template_class': 'genshi.template:TextTemplate'
+                        }),
+                ]
+                extra['message_extractors'] = {
+                        'ganttcalendar': extractors,
+                }
 
-cmdclass = get_l10n_cmdclass() 
-
-if True:
-#if cmdclass: # Yay, Babel is there, we've got something to do! 
-    extra['cmdclass'] = cmdclass 
-    extractors = [ 
-       ('**.py',                'python', None), 
-       ('**/templates/**.html', 'genshi', None), 
-       ('**/templates/**.txt',  'genshi', { 
-            'template_class': 'genshi.template:TextTemplate' 
-       }), 
-    ] 
-    extra['message_extractors'] = { 
-       'ganttcalendar': extractors, 
-    } 
+except ImportError:
+        print("Import of l10n_cmdclass failed\n")
+        pass
 
 
 setup(

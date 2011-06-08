@@ -11,7 +11,7 @@ from trac.util.datefmt import to_datetime, to_utimestamp
 
 from trac.ticket.api import TicketSystem
 #from trac.util.translation import _
-from trac.config import IntOption, BoolOption
+from trac.config import IntOption, BoolOption, Option
 from trac import __version__
 from trac.util.translation import domain_functions
 
@@ -44,6 +44,7 @@ class TicketGanttChartPlugin(Component):
     first_day = IntOption('ganttcalendar', 'first_day', '0', """Begin of week:  0 == Sunday, 1 == Monday (default: 0)""")
     show_ticket_summary = BoolOption('ganttcalendar', 'show_ticket_summary', 'false', """Show ticket summary at gantchart bar. (default: false)""")
     normal_mode = IntOption('ganttcalendar', 'default_zoom_mode', '3', """Default zoom mode in gantchar. (default: 3)""")
+    format = Option('ganttcalendar', 'format', '%Y/%m/%d', """Date format for due assign and due finish""")
 
     substitutions = ['$USER']
     clause_re = re.compile(r'(?P<clause>\d+)_(?P<field>.+)$')
@@ -201,6 +202,9 @@ class TicketGanttChartPlugin(Component):
         show_ticket_summary = req.args.get('show_ticket_summary')
         show_ticket_status = req.args.get('show_ticket_status')
 
+        ts = TicketSystem(self.env)
+        if not 'complete' in ts.get_custom_fields():
+            add_warning(req, _("'complete' field is not defined. Please define it."))
         normal_mode  = req.args.get('normal')
         current_mode = req.args.get('zoom')
         zoom_modes   = [1, 2, 3, 4, 5, 6] # zoom modes

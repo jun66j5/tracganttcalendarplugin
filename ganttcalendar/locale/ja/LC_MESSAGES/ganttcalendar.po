@@ -238,3 +238,6 @@ msgstr "11月"
 
 msgid "December"
 msgstr "12月"
+
+msgid  "'complete' field is not defined. Please define it."
+msgstr "カスタムフィールド'complete'が定義されていません。'complete'フィールドを定義してください"

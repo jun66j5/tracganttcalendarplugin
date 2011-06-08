@@ -242,3 +242,5 @@ msgstr ""
 msgid "December"
 msgstr ""
 
+msgid "'complete' field is not defined. Please define it."
+msgstr ""

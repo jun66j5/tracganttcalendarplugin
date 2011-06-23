@@ -24,7 +24,7 @@ except ImportError:
 
 
 setup(
-    name='TracGanttCalendarPlugin', version='0.5',
+    name='TracGanttCalendarPlugin', version='0.6.1',
     packages=find_packages(exclude=['*.tests*']),
 
     author = "Takashi Okamoto",

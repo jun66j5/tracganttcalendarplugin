@@ -203,7 +203,13 @@ class TicketGanttChartPlugin(Component):
         show_ticket_status = req.args.get('show_ticket_status')
 
         ts = TicketSystem(self.env)
-        if not 'complete' in ts.get_custom_fields():
+        custom_fields = ts.get_custom_fields()
+        has_complete = False
+        for field in custom_fields:
+            if field['name'] == u'complete':
+                has_complete = True
+                break
+        if not has_complete:
             add_warning(req, _("'complete' field is not defined. Please define it."))
         normal_mode  = req.args.get('normal')
         current_mode = req.args.get('zoom')

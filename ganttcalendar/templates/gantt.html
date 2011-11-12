@@ -272,7 +272,7 @@
             <input py:when="zoom &gt; 1" type="image" ACCESSKEY="I" onclick="form.zoom.value = ${zoom-1};" src="${href.chrome('tc/img/zoom_in.png')}" alt="${_('Zoom In')}"/>
             <input py:otherwise="" type="image" disabled="disabled" src="${href.chrome('tc/img/zoom_in_g.png')}"/>
           </py:choose>
-            <label ACCESSKEY="N" onclick="form.zoom.value = ${normal}; form.submit();">${zoom}</label>
+            <label style="cursor: pointer;" ACCESSKEY="N" onclick="form.zoom.value = ${normal}; form.submit();">${zoom}</label>
           <py:choose>
             <input py:when="zoom &lt; 6" type="image" ACCESSKEY="K" onclick="form.zoom.value = ${zoom+1};" src="${href.chrome('tc/img/zoom_out.png')}" alt="${_('Zoom Out')}"/>
             <input py:otherwise="" type="image" disabled="disabled" src="${href.chrome('tc/img/zoom_out_g.png')}"/>

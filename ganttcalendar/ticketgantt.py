@@ -564,11 +564,13 @@ class TicketGanttChartPlugin(Component):
                 component = "*"
             # time tracking
             if estimatedhours != None:
-                estimatedhours = float(estimatedhours)
+                try:    estimatedhours = float(estimatedhours)
+                except: estimatedhours = 0.0
                 sum_estimatedhours += estimatedhours
                 sum_est_isNone = False
             if totalhours != None:
-                totalhours = float(totalhours)
+                try:    totalhours = float(totalhours)
+                except: totalhours = 0.0
                 sum_totalhours += totalhours
             else: totalhours = 0.0
             ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status,

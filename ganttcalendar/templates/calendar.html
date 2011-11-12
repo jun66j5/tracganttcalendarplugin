@@ -116,14 +116,20 @@
             <td>
             </td>
             <td>
+              <label>
               ${_('Milestone')}
               <select name="selected_milestone">
                 <option py:for="m in milestones" value="${m.name}" selected="${selected_milestone==m.name or None}">${m.name}</option>
               </select>
+              </label>
+              <label>
               <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket"
               />${_('Show only my tickets')}
+              </label>
+              <label>
               <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket"
               />${_('Include closed tickets')}
+              </label>
             </td>
             <td align="right">
               <input type="submit" value="${_('Update')}" />

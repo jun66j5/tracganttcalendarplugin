@@ -195,44 +195,53 @@
         <table class="list">
           <tr>
             <td>
+              <label>
               ${_('Base Day')}
               <input type="text" id="field-baseday" name="baseday"
               value="${baseday.strftime(dateFormat)}" length="10" style="font-size:100%"/>
+              </label>
             </td>
           </tr>
           <tr>
             <td>
+              <label>
               ${_('Sort by')}
               <select name="sorted_field" style="font-size:100%">
                 <option value="milestone" selected="${sorted_field=='milestone' or None}">${_('Milestone')}</option>
                 <option value="component" selected="${sorted_field=='component' or None}">${_('Component')}</option>
-              </select><br/>
+              </select>
+              </label><br/>
             </td>
           </tr>
           <tr>
             <td>
-              ${_('Selected')} ${_('Milestone')} =
+              ${_('Selected')}
+              <label>
+              ${_('Milestone')} =
               <select name="selected_milestone">
               <py:for each="i in milestones.keys()">
                 <option selected="${selected_milestone==i or None}" value="$i">$i</option>
               </py:for>
               </select>
+              </label>
               AND 
+              <label>
               ${_('Component')} =
               <select name="selected_component">
               <py:for each="i in components">
                   <option selected="${selected_component==i.name or None}" value="${i.name}">${i.name}</option>
               </py:for>
               </select>
+              </label>
             </td>
           </tr>
           <tr>
             <td>
-              <input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />${_('Show only my tickets')}
-              <input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />${_('Include closed tickets')}
+              <label><input type="checkbox" name="show_my_ticket" checked="$show_my_ticket" />${_('Show only my tickets')}</label>
+              <label><input type="checkbox" name="show_closed_ticket" checked="$show_closed_ticket" />${_('Include closed tickets')}</label>
               &nbsp; &nbsp;
-              <input type="checkbox" name="show_ticket_summary" checked="$show_ticket_summary" />${_('Show ticket summary')}
-              <input type="checkbox" name="show_ticket_status" checked="$show_ticket_status" />${_('Show ticket status')}<br/>
+              <label><input type="checkbox" name="show_ticket_summary" checked="$show_ticket_summary" />${_('Show ticket summary')}</label>
+              <label><input type="checkbox" name="show_ticket_status" checked="$show_ticket_status" />${_('Show ticket status')}</label><br/>
   
             </td>
             <td align="right" valign="bottom">

@@ -8,6 +8,7 @@ from trac.core import *
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
 from trac.util.datefmt import to_datetime
+from trac.config import BoolOption
 from trac.util.translation import domain_functions
 
 
@@ -35,6 +36,8 @@ month_tbl = {
 
 class TicketCalendarPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
+
+    show_weekly_view = BoolOption('ganttcalendar', 'show_weekly_view', 'false', """Set weekly view as default in calendar. (default: false)""")
 
     def __init__(self):
         import pkg_resources
@@ -67,16 +70,20 @@ class TicketCalendarPlugin(Component):
         req.perm.assert_permission('TICKET_VIEW')
         req.perm.require('TICKET_VIEW')
         self.log.debug("process_request " + str(globals().get('__file__')))
-        ymonth = req.args.get('month')
-        yyear = req.args.get('year')
+        year  = req.args.get('year')
+        month = req.args.get('month')
+        day   = req.args.get('day') or '1'
+        weekly_view = int(req.args.get('weekly') or '0')
         show_my_ticket = req.args.get('show_my_ticket')
         show_closed_ticket = req.args.get('show_closed_ticket')
         selected_milestone = req.args.get('selected_milestone')
-        cday = date.today()
-        if not (not ymonth or not yyear):
-            cday = date(int(yyear),int(ymonth),1)
+
+        if year and month:
+            cday = date(int(year),int(month),int(day))
         else:
+            cday = date.today()
             show_closed_ticket = 'on'
+            weekly_view = int(self.show_weekly_view)
 
         # first_day=   0: sunday (default) 1: monday 2: tuesday 3: wednesday 4: thursday 5: friday 6: saturday
         first_day = self.config['ganttcalendar'].getint('first_day', default=0)
@@ -86,12 +93,17 @@ class TicketCalendarPlugin(Component):
 
         dateFormat = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d') or '%Y/%m/%d')
 
-        # cal next month
-        nmonth = cday.replace(day=1).__add__(timedelta(days=32)).replace(day=1)
+        first, last = self.calendarRange(cday.year, cday.month, first_wkday)
 
-        # cal previous month
-        pmonth = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
-        first,last = self.calendarRange(cday.year, cday.month, first_wkday)
+        if weekly_view:
+            first = first + timedelta(weeks=(cday-first).days/7)
+            last = first + timedelta(days=6)
+            prev = first - timedelta(weeks=1)
+            next = first + timedelta(weeks=1)
+        else:
+            prev = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
+            next = cday.replace(day=1).__add__(timedelta(days=32)).replace(day=1)
+
         # process ticket
         db = self.env.get_db_cnx()
         cursor = db.cursor();
@@ -223,7 +235,7 @@ class TicketCalendarPlugin(Component):
                 if mday== milestones[m].get('due'):
                     days[mday]['milestone'].append(m)
 
-        data = {'current':cday, 'prev':pmonth, 'next':nmonth, 'first':first, 'last':last,
+        data = {'current':cday, 'prev':prev, 'next':next, 'weekly':weekly_view, 'first':first, 'last':last,
                 'tickets':tickets, 'milestones':milestones,'days':days,
                 'sum_estimatedhours':sum_estimatedhours, 'sum_totalhours':sum_totalhours,
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_milestone': selected_milestone,

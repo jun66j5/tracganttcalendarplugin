@@ -139,25 +139,36 @@
       </fieldset>
       <table class="list">
         <tr>
-          <td>
-            <input type="button" value="&lt;&lt; ${_(month_tbl[prev.month])}" ACCESSKEY="J" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.submit();"/>
+          <td py:with="btntxt = weekly and '%s %s' % (_(month_tbl[prev.month]), prev.day) or _(month_tbl[prev.month])">
+            <input type="button" value="&lt;&lt; ${btntxt}" ACCESSKEY="J" onclick="form.year.value = ${prev.year}; form.month.value = ${prev.month}; form.day.value = ${prev.day}; form.submit();"/>
           </td>
           <td align="center">
-            <select name="year">
+            <select name="year" onchange="form.day.value = 1; form.weekly.value = 0;">
               <option py:for="y in range(current.year-3,current.year+4)"
                      value="$y"
                      selected="${y==current.year or None}">$y</option>
             </select>
             ${_('Year')}
-            <select name="month">
+            <select name="month" onchange="form.day.value = 1; form.weekly.value = 0;">
               <option py:for="m in [1,2,3,4,5,6,7,8,9,10,11,12]"
                      value="$m" selected="${m==current.month or None}">${_(month_tbl[m])}</option>
             </select>
+
             <input type="submit" value="${_('Update')}" />
-            <label ACCESSKEY="M" onclick="form.year.value = ${date.today().year}; form.month.value = ${date.today().month}; form.submit();"/>
+            <label ACCESSKEY="M" onclick="form.year.value = ${date.today().year}; form.month.value = ${date.today().month}; form.day.value = ${date.today().day}; form.submit();"/>
+          <py:choose>
+            <input py:when="not weekly" type="image" ACCESSKEY="I" onclick="form.weekly.value = 1" src="${href.chrome('tc/img/zoom_in.png')}" alt="${_('Zoom In')}"/>
+            <input py:otherwise="" type="image" disabled="disabled" src="${href.chrome('tc/img/zoom_in_g.png')}"/>
+          </py:choose>
+          <py:choose>
+            <input py:when="weekly" type="image" ACCESSKEY="K" onclick="form.weekly.value = 0;" src="${href.chrome('tc/img/zoom_out.png')}" alt="${_('Zoom Out')}"/>
+            <input py:otherwise="" type="image" disabled="disabled" src="${href.chrome('tc/img/zoom_out_g.png')}"/>
+          </py:choose>
+            <input name="day" type="hidden" value="${current.day}" />
+            <input name="weekly" type="hidden" value="${weekly}" />
           </td>
-          <td align="right">
-            <input type="button" value="${_(month_tbl[next.month])} &gt;&gt;" ACCESSKEY="L" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.submit();"/>
+          <td align="right" py:with="btntxt = weekly and '%s %s' % (_(month_tbl[next.month]), next.day) or _(month_tbl[next.month])">
+            <input type="button" value="${btntxt} &gt;&gt;" ACCESSKEY="L" onclick="form.year.value = ${next.year}; form.month.value = ${next.month}; form.day.value = ${next.day}; form.submit();"/>
           </td>
         </tr>
       </table>
@@ -178,11 +189,15 @@
       </thead>
 
       <tbody>
-        <tr py:for="w in range(((last - first).days + 1)/7)" style="height: 60px;">
+        <tr py:for="w in range(((last - first).days + 1)/7)" style="height: ${weekly and 300 or 60}px;">
           <th></th>
           <py:for each="d in range(7)" py:with="mday= first+ timedelta(w*7+d);holiday_desc= days[mday].get('holiday_desc');">
           <td class="${days[mday]['kind']}" style="width: 14%;" valign="top">
-            <div class="textright"><span py:attrs="{'title':holiday_desc}" py:strip="holiday_desc==None" >${mday.day}</span></div>
+            <div class="textright">
+              <span py:attrs="{'title':holiday_desc}" py:strip="holiday_desc==None" >
+                <py:if test="weekly or mday.day==1">${mday.month}/</py:if>${mday.day}
+              </span>
+            </div>
             <py:for each="c in range(len(days[mday]['ticket']))">
             <div class="ticket" py:with="t=tickets[days[mday]['ticket'][c]['num']]">
               <a class="tip" href="${req.href.ticket()}/${t['id']}">

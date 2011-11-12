@@ -363,7 +363,7 @@
           ${print_chart('done')}
   <py:if test="'MILESTONE_VIEW' in req.perm and (sorted_field == 'milestone' or (selected_milestone != '' and selected_milestone != None))">
     <py:if test="tickets[cnt].get('milestone')!= None and tickets[cnt].get('milestone') in milestones" py:with="d= milestones[tickets[cnt]['milestone']].get('due')">
-      <py:if test="d!=None and 0 &lt;= (d-first_date).days+1 &lt; days_term" py:with="d=(d-first_date).days+1">
+      <py:if test="d!=None and 0 &lt;= (d-first_date).days+1 &lt;= days_term" py:with="d=(d-first_date).days+1">
           <div py:if="show_ticket_summary != 'on'" class="milestone" style="left: ${d*px_dw}px; top: ${cnt*px_ti+px_hd+px_top}px;  width: 2px; height: ${px_ti}px;"></div>
       </py:if>
     </py:if>
@@ -371,7 +371,7 @@
 </py:for>
 <py:with vars="base = (baseday-first_date).days+1">
           <!-- baseline -->
-          <div py:if="base &lt; days_term" class="baseline" style="left:${base*px_dw}px;top:${px_hd}px; height:${maxtic*px_ti+px_height}px; width: 0px;"/>
+          <div py:if="0 &lt;= base &lt;= days_term" class="baseline" style="left:${base*px_dw}px;top:${px_hd}px; height:${maxtic*px_ti+px_height}px; width: 0px;"/>
 </py:with>
         </div>
       </div>

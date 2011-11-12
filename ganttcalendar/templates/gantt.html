@@ -54,9 +54,9 @@
       .tip:hover span.popup
                      {visibility: visible; z-index: 100;font-size: 11px;}
 
-      .tic_done      {position: absolute; overflow: hidden; background:lightgreen;}
-      .tic_late      {position: absolute; overflow: hidden; background:pink;}
-      .tic_todo      {position: absolute; overflow: hidden; background:lightgrey;}
+      .tic_done      {position: absolute; overflow: hidden; cursor: pointer; background:lightgreen;}
+      .tic_late      {position: absolute; overflow: hidden; cursor: pointer; background:pink;}
+      .tic_todo      {position: absolute; overflow: hidden; cursor: pointer; background:lightgrey;}
       .tic_done_bl   {position: absolute; overflow: hidden; background:green;}
       .tic_late_bl   {position: absolute; overflow: hidden; background:red;}
       .tic_todo_bl   {position: absolute; overflow: hidden; background:gray;}
@@ -328,7 +328,7 @@
         <py:with vars="tic_due='(%d/%d ~ %d/%d)' % (t['due_assign'].month, t['due_assign'].day, t['due_close'].month, t['due_close'].day );
                        tic_tip='%s#%d: %s - %s %s%s' % (t['type'], t['id'], t['summary'], format_author(t['owner']), tic_due, (t['estimatedhours']!=None and ' '+ str(t['estimatedhours']) +'h' or '') );">
           <div class="${'tic_'+kind+'_bl'}" style="left:${int(s*px_dw+1)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2)+(ti_mrgn/2)+px_top}px;width: ${int((e-s)*px_dw)}px;height:${px_ch}px;"/>
-          <div class="${'tic_'+kind}" py:attrs="{'title':tic_tip}" style="left:${int(s*px_dw+2)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2+1)+(ti_mrgn/2)+px_top}px;width: ${int((e-s)*px_dw)-2}px;height:${px_ch-2}px;"/>
+          <div class="${'tic_'+kind}" onclick="location.href='${req.href.ticket()}/${t['id']}';" py:attrs="{'title':tic_tip}" style="left:${int(s*px_dw+2)}px;top:${px_ti*cnt+px_hd+((px_ti-px_ch)/2+1)+(ti_mrgn/2)+px_top}px;width: ${int((e-s)*px_dw)-2}px;height:${px_ch-2}px;"/>
         </py:with>
     </py:if>
   </py:with>

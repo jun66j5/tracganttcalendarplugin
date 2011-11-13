@@ -1,25 +1,17 @@
 # -*- coding: utf-8 -*-
-from trac.ticket import ITicketChangeListener, Ticket, ITicketManipulator
-from trac.config import Option
-from trac.core import *
-import datetime
-from trac.util.translation import domain_functions
 
-# i18n support for plugins, available since Trac r7705
-# use _, tag_ and N_ as usual, e.g. _("this is a message text")
-_, tag_, N_, add_domain = domain_functions('ganttcalendar', 
-    '_', 'tag_', 'N_', 'add_domain')
+import datetime
+
+from trac.ticket import ITicketChangeListener
+from trac.config import Option
+from trac.core import Component, implements
+
 
 class CompleteTicketObserver(Component):
     implements(ITicketChangeListener)
 
     complete_conditions = Option('ganttcalendar', 'complete_conditions', 'fixed, invalid', """The resolutions to change the ticket progress to 100% when ticket closed""")
     complete_field = Option('ganttcalendar', 'complete_field', 'complete', """Field define progress value for ticket.""")
-
-    def __init__(self):
-        import pkg_resources
-        locale_dir = pkg_resources.resource_filename(__name__, 'locale')
-        add_domain(self.env.path, locale_dir)
 
     def ticket_created(self, ticket):
         """Called when a ticket is created."""

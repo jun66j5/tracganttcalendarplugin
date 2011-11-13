@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
 import re, calendar, time
-from datetime import datetime, date, timedelta
+from datetime import date, timedelta
 
 from genshi.builder import tag
 
-from trac.core import *
+from trac.core import Component, implements, TracError
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider
 from trac.util.datefmt import to_datetime
 from trac.config import BoolOption
-from trac.util.translation import domain_functions
 
+from ganttcalendar.translation import _
 
-from trac.util import Ranges
-
-# i18n support for plugins, available since Trac r7705
-# use _, tag_ and N_ as usual, e.g. _("this is a message text")
-_, tag_, N_, add_domain = domain_functions('ganttcalendar', 
-    '_', 'tag_', 'N_', 'add_domain')
 
 month_tbl = {
   1: 'January',
@@ -38,12 +32,6 @@ class TicketCalendarPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
 
     show_weekly_view = BoolOption('ganttcalendar', 'show_weekly_view', 'false', """Set weekly view as default in calendar. (default: false)""")
-
-    def __init__(self):
-        import pkg_resources
-        locale_dir = pkg_resources.resource_filename(__name__, 'locale')
-        add_domain(self.env.path, locale_dir)
-
 
     # INavigationContributor methods
     def get_active_navigation_item(self, req):

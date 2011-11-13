@@ -1,23 +1,18 @@
 # -*- coding: utf-8 -*-
-from trac.core import *
-from trac.ticket import ITicketManipulator
+
 import time
 from datetime import date
-from trac.util.datefmt import format_date
-from trac.util.translation import domain_functions
 
-# i18n support for plugins, available since Trac r7705
-# use _, tag_ and N_ as usual, e.g. _("this is a message text")
-_, tag_, N_, add_domain = domain_functions('ganttcalendar', 
-    '_', 'tag_', 'N_', 'add_domain')
+from trac.core import Component, implements, TracError
+from trac.ticket import ITicketManipulator
+from trac.util.datefmt import format_date
+
+from ganttcalendar.translation import _
+
 
 class TicketValidator(Component):
-    implements(ITicketManipulator)
 
-    def __init__(self):
-        import pkg_resources
-        locale_dir = pkg_resources.resource_filename(__name__, 'locale')
-        add_domain(self.env.path, locale_dir)
+    implements(ITicketManipulator)
 
     def prepare_ticket(req, ticket, fields, actions):
         """not currently called"""

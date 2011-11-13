@@ -1,27 +1,21 @@
 # -*- coding: utf-8 -*-
-import re, calendar, time, sys
-from datetime import datetime, date, timedelta
+
+import re, calendar, time
+from datetime import date, timedelta
 from genshi.builder import tag
 
-from trac.core import *
+from trac.core import Component, implements, TracError
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider, \
                             add_script, add_stylesheet, add_script_data, add_warning
 from trac.util.datefmt import to_datetime, to_utimestamp
-
 from trac.ticket.api import TicketSystem
-#from trac.util.translation import _
 from trac.config import IntOption, BoolOption, Option
 from trac import __version__
-from trac.util.translation import domain_functions
-
-
 from trac.util import Ranges
 
-# i18n support for plugins, available since Trac r7705
-# use _, tag_ and N_ as usual, e.g. _("this is a message text")
-_, tag_, N_, add_domain = domain_functions('ganttcalendar', 
-    '_', 'tag_', 'N_', 'add_domain')
+from ganttcalendar.translation import _
+
 
 month_tbl = {
   1: 'January',
@@ -38,6 +32,7 @@ month_tbl = {
   12: 'December'
 }
 
+
 class TicketGanttChartPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
 
@@ -50,11 +45,6 @@ class TicketGanttChartPlugin(Component):
     clause_re = re.compile(r'(?P<clause>\d+)_(?P<field>.+)$')
     remove_re = re.compile(r'rm_filter_\d+_(.+)_(\d+)$')
     add_re = re.compile(r'add_(\d+)$')
-
-    def __init__(self):
-        import pkg_resources
-        locale_dir = pkg_resources.resource_filename(__name__, 'locale')
-        add_domain(self.env.path, locale_dir)
 
     # _get_constraints: internal method
     def _get_constraints(self, req=None, arg_list=[]):
@@ -177,7 +167,7 @@ class TicketGanttChartPlugin(Component):
 
     def adjust( self, x_start, x_end, term):
         if x_start > term or x_end < 0:
-            x_start= done_end= None
+            x_start= None
         else:
             if x_start < 0:
                 x_start= 0

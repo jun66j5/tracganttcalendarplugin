@@ -1,24 +1,33 @@
 # -*- coding: utf-8 -*-
 
-from trac.admin import IAdminPanelProvider
-from trac.core import *
-from trac.util.translation import domain_functions
 import locale
 
-# i18n support for plugins, available since Trac r7705
-# use _, tag_ and N_ as usual, e.g. _("this is a message text")
-_, tag_, N_, add_domain = domain_functions('ganttcalendar', 
-    '_', 'tag_', 'N_', 'add_domain')
+from trac.admin import IAdminPanelProvider
+from trac.core import Component, implements, TracError
+from trac.env import IEnvironmentSetupParticipant
+
+from ganttcalendar.translation import _, add_domain
 
 
 class HolidayAdminPanel(Component):
-    implements(IAdminPanelProvider)
+
+    implements(IAdminPanelProvider, IEnvironmentSetupParticipant)
 
     def __init__(self):
         import pkg_resources
         locale_dir = pkg_resources.resource_filename(__name__, 'locale')
         add_domain(self.env.path, locale_dir)
 
+    # Work around for untranslated messages when first-response
+    # IEnvironmentSetupParticipant methods
+    def environment_created(self):
+        pass
+
+    def environment_needs_upgrade(self, db):
+        return False
+
+    def upgrade_environment(self, db):
+        pass
 
     def get_admin_panels(self, req):
         if 'TRAC_ADMIN' in req.perm:

@@ -61,17 +61,10 @@ class TicketCalendarPlugin(Component):
         year  = req.args.get('year')
         month = req.args.get('month')
         day   = req.args.get('day') or '1'
-        weekly_view = int(req.args.get('weekly') or '0')
+        weekly_view = int(req.args.get('weekly') or self.show_weekly_view)
         show_my_ticket = req.args.get('show_my_ticket')
         show_closed_ticket = req.args.get('show_closed_ticket')
         selected_milestone = req.args.get('selected_milestone')
-
-        if year and month:
-            cday = date(int(year),int(month),int(day))
-        else:
-            cday = date.today()
-            show_closed_ticket = 'on'
-            weekly_view = int(self.show_weekly_view)
 
         # first_day=   0: sunday (default) 1: monday 2: tuesday 3: wednesday 4: thursday 5: friday 6: saturday
         first_day = self.config['ganttcalendar'].getint('first_day', default=0)
@@ -79,7 +72,13 @@ class TicketCalendarPlugin(Component):
         first_wkday = weekdays[first_day % 7]
         # first_wkday= 0: monday 1: tuesday 2: wednesday 3: thursday 4: friday 5: saturday 6: sunday (default)
 
-        dateFormat = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d') or '%Y/%m/%d')
+        dateFormat = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d')) or '%Y/%m/%d'
+
+        if year and month:
+            cday = date(int(year),int(month),int(day))
+        else:
+            cday = date.today()
+            show_closed_ticket = 'on'
 
         first, last = self.calendarRange(cday.year, cday.month, first_wkday)
 

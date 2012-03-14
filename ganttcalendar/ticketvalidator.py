@@ -27,10 +27,10 @@ class TicketValidator(Component):
 
 
         # due_assign, due_close field
-        dueDate    = {'due_assign':None, 'due_close':None}
-        format     = self.config['ganttcalendar'].get('format', default='%Y/%m/%d') or '%Y/%m/%d'
-        dateFormat = format.replace('%Y', 'YYYY', 1).replace('%y', 'YY', 1) \
-                           .replace('%m', 'MM', 1).replace('%d', 'DD', 1)
+        dueDate     = {'due_assign':None, 'due_close':None}
+        format      = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d')) or '%Y/%m/%d'
+        format_hint = format.replace('%Y', 'YYYY', 1).replace('%y', 'YY', 1) \
+                            .replace('%m', 'MM', 1).replace('%d', 'DD', 1)
 
         for field in ('due_assign', 'due_close'):
             due = ticket.values.get(field)
@@ -38,11 +38,11 @@ class TicketValidator(Component):
                 try:
                     t = time.strptime(due, format)
                     dueDate[field]       = date( t[0],t[1],t[2])
-                    ticket.values[field] = format_date( dueDate[field], str(format))
+                    ticket.values[field] = format_date( dueDate[field], format)
                 except( TracError, ValueError, TypeError):
                     dueDate[field]       = None
                     label = self.config['ticket-custom'].get(field+'.label', default='')
-                    errors.append(( u"%s(%s)" % (label, field), _("'%s' is invalid date format. Please input format as %s.") % (due, dateFormat) ))
+                    errors.append(( u"%s(%s)" % (label, field), _("'%s' is invalid date format. Please input format as %s.") % (due, format_hint) ))
 
         if (dueDate['due_assign'] and dueDate['due_close']) \
           and (dueDate['due_assign'] > dueDate['due_close']):

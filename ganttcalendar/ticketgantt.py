@@ -38,7 +38,7 @@ class TicketGanttChartPlugin(Component):
 
     first_day = IntOption('ganttcalendar', 'first_day', '0', """Begin of week:  0 == Sunday, 1 == Monday (default: 0)""")
     show_ticket_summary = BoolOption('ganttcalendar', 'show_ticket_summary', 'false', """Show ticket summary at gantchart bar. (default: false)""")
-    normal_mode = IntOption('ganttcalendar', 'default_zoom_mode', '3', """Default zoom mode in gantchar. (default: 3)""")
+    default_zoom_mode = IntOption('ganttcalendar', 'default_zoom_mode', '3', """Default zoom mode in gantchar. (default: 3)""")
     format = Option('ganttcalendar', 'format', '%Y/%m/%d', """Date format for due assign and due finish""")
 
     substitutions = ['$USER']
@@ -179,8 +179,8 @@ class TicketGanttChartPlugin(Component):
         req.perm.assert_permission('TICKET_VIEW')
         req.perm.require('TICKET_VIEW')
         self.log.debug("process_request " + str(globals().get('__file__')))
-        ymonth = req.args.get('month')
-        yyear = req.args.get('year')
+        year  = req.args.get('year')
+        month = req.args.get('month')
         baseday = req.args.get('baseday')
         selected_milestone = req.args.get('selected_milestone')
         selected_component = req.args.get('selected_component')
@@ -201,16 +201,16 @@ class TicketGanttChartPlugin(Component):
                 break
         if not has_complete:
             add_warning(req, _("'complete' field is not defined. Please define it."))
-        normal_mode  = req.args.get('normal')
-        current_mode = req.args.get('zoom')
-        zoom_modes   = [1, 2, 3, 4, 5, 6] # zoom modes
-        if normal_mode == None:
-            normal_mode  = self.config['ganttcalendar'].getint('default_zoom_mode', default=3)
-            current_mode = normal_mode = zoom_modes[normal_mode % 6 -1]
-        else:
-            current_mode = zoom_modes[int(current_mode) % 6 -1]
+
+        default_zoom_mode = req.args.get('normal') or self.default_zoom_mode
+        current_zoom_mode = req.args.get('zoom') or default_zoom_mode
+
+        zoom_modes = [1, 2, 3, 4, 5, 6] # zoom modes
+        default_zoom_mode = zoom_modes[int(default_zoom_mode) % 6 -1]
+        current_zoom_mode = zoom_modes[int(current_zoom_mode) % 6 -1]
+
         zoom_months = {1:1, 2:2, 3:3, 4:4, 5:5, 6:6} # zoom mode: months term
-        months_term = zoom_months[current_mode]
+        months_term = zoom_months[current_zoom_mode]
 
         # first_day=   0: sunday (default) 1: monday 2: tuesday 3: wednesday 4: thursday 5: friday 6: saturday
         first_day = self.config['ganttcalendar'].getint('first_day', default=0)
@@ -218,7 +218,7 @@ class TicketGanttChartPlugin(Component):
         first_wkday = weekdays[first_day % 7]
         # first_wkday= 0: monday 1: tuesday 2: wednesday 3: thursday 4: friday 5: saturday 6: sunday (default)
 
-        dateFormat = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d') or '%Y/%m/%d')
+        dateFormat = str(self.config['ganttcalendar'].get('format', default='%Y/%m/%d')) or '%Y/%m/%d'
 
         if baseday != None:
             t = time.strptime(baseday, dateFormat)
@@ -226,29 +226,23 @@ class TicketGanttChartPlugin(Component):
         else:
             baseday = date.today()
             show_ticket_status = 'on'
-            show_ticket_summary = self.config['ganttcalendar'].getbool('show_ticket_summary', default='false')
-            if show_ticket_summary:
-                show_ticket_summary = 'on'
-            else:
-                show_ticket_summary = None
+            show_ticket_summary = self.show_ticket_summary and 'on' or None
 
         if show_ticket_summary:
             ticket_margin = 12
         else:
             ticket_margin = 0
 
-        cday = date.today()
-        if not (not ymonth or not yyear):
-            cday = date(int(yyear),int(ymonth),1)
-
-        # cal next month
-        nmonth = cday.replace(day=1).__add__(timedelta(days=32)).replace(day=1)
-
-        # cal previous month
-        pmonth = cday.replace(day=1).__add__(timedelta(days=-1)).replace(day=1)
+        if year and month:
+            cday = date(int(year),int(month),1)
+        else:
+            cday = date.today()
 
         first_date= cday.replace(day=1)
         days_term= (first_date.__add__(timedelta(months_term*32)).replace(day=1)-first_date).days
+
+        prev = first_date.__add__(timedelta(days=-1)).replace(day=1)
+        next = first_date.__add__(timedelta(days=32)).replace(day=1)
 
         # process ticket
         db = self.env.get_db_cnx()
@@ -635,7 +629,7 @@ class TicketGanttChartPlugin(Component):
         except:
             pass
 
-        data = {'baseday': baseday, 'current':cday, 'prev':pmonth, 'next':nmonth, 'month_tbl': month_tbl}
+        data = {'baseday': baseday, 'current':cday, 'prev':prev, 'next':next, 'month_tbl': month_tbl}
         data.update({'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field})
         data.update({'show_ticket_summary': show_ticket_summary, 'show_ticket_status': show_ticket_status, 'ti_mrgn': ticket_margin})
         data.update({'selected_milestone':selected_milestone,'selected_component': selected_component})
@@ -643,7 +637,7 @@ class TicketGanttChartPlugin(Component):
         data.update({'sum_estimatedhours':sum_estimatedhours, 'sum_totalhours':sum_totalhours})
         data.update({'holidays':holidays,'first_date':first_date,'days_term':days_term})
         data.update({'calendar':calendar})
-        data.update({'dateFormat': dateFormat ,'first_wkday':first_wkday,'normal':normal_mode,'zoom':current_mode, '_':_})
+        data.update({'dateFormat': dateFormat ,'first_wkday':first_wkday,'normal':default_zoom_mode,'zoom':current_zoom_mode, '_':_})
         data.update({'fields':fields_data, 'clauses':clauses_data, 'modes': self.get_modes()})
 
         ### display_html

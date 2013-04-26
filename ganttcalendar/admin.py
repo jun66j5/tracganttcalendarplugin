@@ -86,13 +86,11 @@ class HolidayAdminPanel(Component):
 
                 sql = "CREATE TABLE holiday (date TEXT, description TEXT)"
                 cursor.execute(sql)
-                db_type = self.config['trac'].get('database').split(':')[0].lower()
-                if db_type != 'mysql':
-                    # SQLite, PostgreSQL
-                    sql = "CREATE UNIQUE INDEX idx_holiday ON holiday(date ASC)"
-                else:
-                    # MySQL
-                    sql = "CREATE UNIQUE INDEX idx_holiday ON holiday(date(10) ASC)"
+                coltype = 'date'
+                if self.config.get('trac', 'database').startswith('mysql:'):
+                    coltype = 'date(10)'
+                sql = 'CREATE UNIQUE INDEX idx_holiday ON holiday (%s)' \
+                      % coltype
                 cursor.execute(sql)
                 db.commit()
                 for h in holidays_tbl.keys():

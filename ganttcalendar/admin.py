@@ -92,10 +92,8 @@ class HolidayAdminPanel(Component):
                 sql = 'CREATE UNIQUE INDEX idx_holiday ON holiday (%s)' \
                       % coltype
                 cursor.execute(sql)
-                db.commit()
-                for h in holidays_tbl.keys():
-                    sql = "INSERT INTO holiday VALUES('"+ h+ "','"+ holidays_tbl[h]+ "')"
-                    cursor.execute(sql)
+                cursor.executemany('INSERT INTO holiday VALUES(%s,%s)',
+                                   list(holidays_tbl.iteritems()))
                 db.commit()
                 req.redirect(req.href.admin(cat, page))
 

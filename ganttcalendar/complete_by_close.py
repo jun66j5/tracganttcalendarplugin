@@ -38,7 +38,8 @@ class CompleteTicketObserver(Component):
                 return old_values[field]
             # for INSERT: save_ticket_change
             else:
-                cursor = self.env.get_db_cnx().cursor()
+                db = self.env.get_db_cnx()
+                cursor = db.cursor()
                 cursor.execute("SELECT * FROM ticket_custom where ticket=%s and name=%s" , (ticket.id, field))
                 val = cursor.fetchone()
                 if val:

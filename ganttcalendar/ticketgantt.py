@@ -649,9 +649,10 @@ class TicketGanttChartPlugin(Component):
                               'modes': data['modes']})
 
         add_stylesheet(req, 'common/css/report.css')
-        if __version__ > '0.12':
-            # >= Trac 0.12.1
-            add_script(req, 'common/js/query.js')
+
+        from pkg_resources import parse_version
+        if parse_version(__version__) > parse_version('0.12'):
+            add_script(req, 'common/js/query.js')  # Trac 0.12.1 or later
         else:
             # only Trac 0.12, not compatible with Trac 0.11.x
             add_script(req, 'tc/js/query.js')

@@ -28,6 +28,13 @@ month_tbl = {
   12: 'December'
 }
 
+def _to_float(value, default=None):
+    try:
+        return float(value)
+    except:
+        return default
+
+
 class TicketCalendarPlugin(Component):
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
 
@@ -156,11 +163,11 @@ class TicketCalendarPlugin(Component):
                 continue
             # time tracking
             if estimatedhours != None:
-                estimatedhours = float(estimatedhours)
+                estimatedhours = _to_float(estimatedhours, default=0.0)
                 sum_estimatedhours += estimatedhours
                 sum_est_isNone = False
             if totalhours != None:
-                totalhours = float(totalhours)
+                totalhours = _to_float(totalhours, default=0.0)
                 sum_totalhours += totalhours
             else: totalhours = 0.0
             ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description,

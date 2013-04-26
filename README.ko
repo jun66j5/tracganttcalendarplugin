@@ -32,7 +32,7 @@ show_weekly_view = false
 
 [ticket-custom]
 complete = select
-complete.label = 진척율 (%)
+complete.label = 진척율 [%]
 complete.options = |0|10|20|30|40|50|60|70|80|90|100
 complete.order = 3
 due_assign = text
@@ -48,7 +48,7 @@ complete_conditions :
   티켓을 close할 때, 진척율을 100%로 자동 변경하고자 하는 해결방법들(Resolutions)을 설정합니다.
 
 default_zoom_mode :
-  간트 차트에서 기본으로 표시할 줄 줌 모드를 1 ~ 6 단계 값 중에서 선택하여 설정합니다.
+  간트 차트에서 기본으로 표시할 줌 모드를 1 ~ 6 단계 값 중에서 선택하여 설정합니다.
 
 first_day :
   일요일부터 시작하는 시작 요일을 월요일로 변경하려면 first_day = 1 로 변경합니다.
@@ -92,19 +92,19 @@ TRAC_ADMIN 권한을 가진 계정으로 로그인하여 휴일 테이블을 생
 간트 차트와 캘린더 사용의 편의를 위해 단축키가 제공됩니다.
 
 간트 차트 - alt + (shift) + i,j,k,l,m,n
-  상 - zoom in       - alt + i (IE) / alt + shift + i (firefox)
-  하 - zoom out      - alt + k (IE) / alt + shift + k (firefox)
-  좌 - 이전 달 이동  - alt + j (IE) / alt + shift + j (firefox)
-  우 - 다음 달 이동  - alt + l (IE) / alt + shift + l (firefox)
-  기본 모드 (normal) - alt + shift + n (firefox) / IE 지원 안함
-  이번 달 이동       - alt + shift + m (firefox) / IE 지원 안함
+  상 - zoom in       - alt + i (IE/Chrome) / alt + shift + i (firefox)
+  하 - zoom out      - alt + k (IE/Chrome) / alt + shift + k (firefox)
+  좌 - 이전 달 이동  - alt + j (IE/Chrome) / alt + shift + j (firefox)
+  우 - 다음 달 이동  - alt + l (IE/Chrome) / alt + shift + l (firefox)
+  기본 모드 (normal) - alt + n (Chrome) / alt + shift + n (firefox) / IE 지원 안함
+  이번 달 이동       - alt + m (Chrome) / alt + shift + m (firefox) / IE 지원 안함
 
 캘린더 - alt + (shift) + i,j,k,l,m
-  상 - Weekly View     - alt + i (IE) / alt + shift + i (firefox)
-  하 - Month View      - alt + k (IE) / alt + shift + k (firefox)
-  좌 - 이전 달/주 이동 - alt + j (IE) / alt + shift + j (firefox)
-  우 - 다음 달/주 이동 - alt + l (IE) / alt + shift + l (firefox)
-  이번 달/주 이동      - alt + shift + m (firefox) / IE 지원 안함
+  상 - Weekly View     - alt + i (IE/Chrome) / alt + shift + i (firefox)
+  하 - Month View      - alt + k (IE/Chrome) / alt + shift + k (firefox)
+  좌 - 이전 달/주 이동 - alt + j (IE/Chrome) / alt + shift + j (firefox)
+  우 - 다음 달/주 이동 - alt + l (IE/Chrome) / alt + shift + l (firefox)
+  이번 달/주 이동      - alt + m (Chrome) / alt + shift + m (firefox) / IE 지원 안함
 
 
 

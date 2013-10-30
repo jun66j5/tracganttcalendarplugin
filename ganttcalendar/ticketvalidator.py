@@ -36,9 +36,12 @@ class TicketValidator(Component):
             due = ticket.values.get(field)
             if due:
                 try:
-                    t = time.strptime(due, format)
-                    dueDate[field]       = date( t[0],t[1],t[2])
-                    ticket.values[field] = format_date( dueDate[field], format)
+                    if isinstance(due, str):
+                        t = time.strptime(due, format)
+                        dueDate[field]       = date( t[0],t[1],t[2])
+                        ticket.values[field] = format_date( dueDate[field], format)
+                    else:
+                        dueDate[field]       = due
                 except( TracError, ValueError, TypeError):
                     dueDate[field]       = None
                     label = self.config['ticket-custom'].get(field+'.label', default='')

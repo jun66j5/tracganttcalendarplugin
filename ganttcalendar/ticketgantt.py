@@ -529,12 +529,18 @@ class TicketGanttChartPlugin(Component):
                 t = time.strptime(row['due_assign'], dateFormat)
                 row['due_assign'] = date(t[0], t[1], t[2])
             except (TracError, ValueError, TypeError):
-                continue
+                try:
+                    row['due_assign'] = date.fromtimestamp(int(row['due_assign'][:-6]))
+                except (TracError, ValueError, TypeError):
+                    continue
             try:
                 t = time.strptime(row['due_close'], dateFormat)
                 row['due_close'] = date(t[0], t[1], t[2])
             except (TracError, ValueError, TypeError):
-                continue
+                try:
+                    row['due_close'] = date.fromtimestamp(int(row['due_close'][:-6]))
+                except (TracError, ValueError, TypeError):
+                    continue
             if row['due_assign'] > row['due_close']:
                 continue
 

@@ -71,18 +71,21 @@ class HolidayAdminPanel(Component):
                 req.redirect(req.href.admin(cat, page))
 
             elif req.args.get('create_table'):
-                (loc,enc) = locale.getdefaultlocale()
+                loc, enc = locale.getdefaultlocale()
 
-                self.log.info("loc:"+loc)
-                if (loc.find("ko_")==0) or (loc.find("Korean_")==0):
-                   from holiday_ko import holidays_tbl
-                   self.log.info("import holiday_ko")
-                elif (loc.find("ja_")==0) or (loc.find("Japanese_")==0):
-                   from holiday_ja import holidays_tbl
-                   self.log.info("import holiday_ja")
+                self.log.debug("loc: %r", loc)
+                loc = (loc or '').lower()
+                if loc.startswith('ko_') or loc.startswith('korean_'):
+                   import holiday_ko
+                   holidays_tbl = holiday_ko.holidays_tbl
+                   self.log.debug("import holiday_ko")
+                elif loc.startswith('ja_') or loc.startswith('japanese_'):
+                   import holiday_ja
+                   holidays_tbl = holiday_ja.holidays_tbl
+                   self.log.debug("import holiday_ja")
                 else:
-                   holidays_tbl={}
-                   self.log.info("create empty holiday table")
+                   holidays_tbl = {}
+                   self.log.debug('create empty holiday table')
 
                 sql = "CREATE TABLE holiday (date TEXT, description TEXT)"
                 cursor.execute(sql)

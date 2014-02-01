@@ -46,27 +46,24 @@ class HolidayAdminPanel(Component):
         if req.method == 'POST':
             if req.args.get('add'):
                 keydate = req.args.get('date')
-                sql = "SELECT count(*) FROM holiday WHERE date='" + keydate + "'"
-                cursor.execute(sql)
+                cursor.execute("SELECT COUNT(*) FROM holiday WHERE date=%s",
+                               (keydate,))
                 for cnt, in cursor:
                     dup_chk = cnt
-                if dup_chk == 1:
-                    raise TracError(_('Holiday %(date)s already exists.',date=keydate))
-                sql = "INSERT INTO holiday VALUES('" + keydate +"','" + req.args.get('description') + "')"
-                cursor.execute(sql)
+                if dup_chk != 0:
+                    raise TracError(_('Holiday %(date)s already exists.',
+                                      date=keydate))
+                cursor.execute("INSERT INTO holiday VALUES(%s,%s)",
+                               (keydate, req.args.get('description')))
                 db.commit()
                 req.redirect(req.href.admin(cat, page))
 
             elif req.args.get('remove'):
-                sel = req.args.get('sel')
+                sel = req.args.getlist('sel')
                 if not sel:
                     raise TracError(_('No holiday selected'))
-                if not isinstance(sel, list):
-                    sel = [sel]
-                for name in sel:
-                    keydate = name
-                    sql = "DELETE FROM holiday WHERE date ='" + keydate+ "'"
-                    cursor.execute(sql)
+                cursor.executemany("DELETE FROM holiday WHERE date=%s",
+                                   [(val,) for val in sel])
                 db.commit()
                 req.redirect(req.href.admin(cat, page))
 

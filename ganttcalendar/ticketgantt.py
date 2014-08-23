@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 
-import re, calendar, time
+import re
+import calendar
+import time
 from datetime import date, timedelta
 from genshi.builder import tag
 
+from trac import __version__
+from trac.config import IntOption, BoolOption, Option
 from trac.core import Component, implements, TracError
+from trac.db.api import get_column_names
+from trac.ticket.api import TicketSystem
+from trac.util import Ranges
+from trac.util.compat import any
+from trac.util.datefmt import to_datetime, to_utimestamp
 from trac.web import IRequestHandler
 from trac.web.chrome import INavigationContributor, ITemplateProvider, \
-                            add_script, add_stylesheet, add_script_data, add_warning
-from trac.util.datefmt import to_datetime, to_utimestamp
-from trac.ticket.api import TicketSystem
-from trac.config import IntOption, BoolOption, Option
-from trac import __version__
-from trac.util import Ranges
+                            add_script, add_stylesheet, add_script_data, \
+                            add_warning
 
 from ganttcalendar.translation import _
 
@@ -34,12 +39,17 @@ month_tbl = {
 
 
 class TicketGanttChartPlugin(Component):
+
     implements(INavigationContributor, IRequestHandler, ITemplateProvider)
 
-    first_day = IntOption('ganttcalendar', 'first_day', '0', """Begin of week:  0 == Sunday, 1 == Monday (default: 0)""")
-    show_ticket_summary = BoolOption('ganttcalendar', 'show_ticket_summary', 'false', """Show ticket summary at gantchart bar. (default: false)""")
-    default_zoom_mode = IntOption('ganttcalendar', 'default_zoom_mode', '3', """Default zoom mode in gantchar. (default: 3)""")
-    format = Option('ganttcalendar', 'format', '%Y/%m/%d', """Date format for due assign and due finish""")
+    first_day = IntOption('ganttcalendar', 'first_day', '0',
+        doc="""Begin of week:  0 == Sunday, 1 == Monday (default: 0)""")
+    show_ticket_summary = BoolOption('ganttcalendar', 'show_ticket_summary', 'false',
+        doc="""Show ticket summary at gantchart bar. (default: false)""")
+    default_zoom_mode = IntOption('ganttcalendar', 'default_zoom_mode', '3',
+        doc="""Default zoom mode in gantchar. (default: 3)""")
+    format = Option('ganttcalendar', 'format', '%Y/%m/%d',
+        doc="""Date format for due assign and due finish""")
 
     substitutions = ['$USER']
     clause_re = re.compile(r'(?P<clause>\d+)_(?P<field>.+)$')
@@ -68,7 +78,7 @@ class TicketGanttChartPlugin(Component):
                     else:
                         index = int(match.group(2))
                     remove_constraints[k[10:match.end(1)]] = index
-            
+
             # Get constraints from form fields, and add a constraint if
             # requested for clients without JavaScript
             add_num = None
@@ -94,7 +104,7 @@ class TicketGanttChartPlugin(Component):
                     if fields[field]['type'] == 'time':
                         ends = req.args.getlist(k + '_end')
                         if ends:
-                            vals = [start + '..' + end 
+                            vals = [start + '..' + end
                                     for (start, end) in zip(vals, ends)]
                     if k in remove_constraints:
                         idx = remove_constraints[k]
@@ -116,7 +126,7 @@ class TicketGanttChartPlugin(Component):
                     mode = modes and modes[0]['value'] or ''
                     clause.setdefault(field, []).append(mode)
             clauses.extend(each[1] for each in sorted(constraints.iteritems()))
-        
+
         # Get constraints from query string
         clauses.append({})
         for field, val in arg_list or req.arg_list:
@@ -125,7 +135,7 @@ class TicketGanttChartPlugin(Component):
             elif field in fields:
                 clauses[-1].setdefault(field, []).append(val)
         clauses = filter(None, clauses)
-        
+
         return clauses
 
     @staticmethod
@@ -152,11 +162,11 @@ class TicketGanttChartPlugin(Component):
             {'name': _("is not"), 'value': "!"},
         ]
         return modes
-    
+
     # INavigationContributor methods
     def get_active_navigation_item(self, req):
         return 'ticketgantt'
-    
+
     def get_navigation_items(self, req):
         if req.perm.has_permission('TICKET_VIEW'):
             yield ('mainnav', 'ticketgantt',tag.a(_('Gantt chart'), href=req.href.ticketgantt()))
@@ -167,18 +177,18 @@ class TicketGanttChartPlugin(Component):
 
     def adjust( self, x_start, x_end, term):
         if x_start > term or x_end < 0:
-            x_start= None
+            x_start = None
         else:
             if x_start < 0:
-                x_start= 0
+                x_start = 0
             if x_end > term:
-                x_end= term
+                x_end = term
         return x_start, x_end
 
     def process_request(self, req):
-        req.perm.assert_permission('TICKET_VIEW')
         req.perm.require('TICKET_VIEW')
-        self.log.debug("process_request " + str(globals().get('__file__')))
+
+        tktsys = TicketSystem(self.env)
         year  = req.args.get('year')
         month = req.args.get('month')
         baseday = req.args.get('baseday')
@@ -187,13 +197,12 @@ class TicketGanttChartPlugin(Component):
         show_my_ticket = req.args.get('show_my_ticket')
         show_closed_ticket = req.args.get('show_closed_ticket')
         sorted_field = req.args.get('sorted_field')
-        if sorted_field == None:
+        if not any(sorted_field == f['name'] for f in tktsys.fields):
             sorted_field = 'milestone'
         show_ticket_summary = req.args.get('show_ticket_summary')
         show_ticket_status = req.args.get('show_ticket_status')
 
-        ts = TicketSystem(self.env)
-        custom_fields = ts.get_custom_fields()
+        custom_fields = tktsys.get_custom_fields()
         has_complete = False
         for field in custom_fields:
             if field['name'] == u'complete':
@@ -247,31 +256,29 @@ class TicketGanttChartPlugin(Component):
         # process ticket
         db = self.env.get_db_cnx()
         cursor = db.cursor();
-        sql = ""
-        condition=""
+        condition = []
+        args = []
 
         # filter for Trac 0.12.1
         ### __init__
-        self.fields = TicketSystem(self.env).get_ticket_fields()
-        self.time_fields = set(f['name'] for f in self.fields
-                               if f['type'] == 'time')
+        fields = TicketSystem(self.env).get_ticket_fields()
+        time_fields = set(f['name'] for f in fields if f['type'] == 'time')
 
-        self.constraints = self._get_constraints(req)
+        req_consts = self._get_constraints(req)
 
         constraint_cols = {}
-        for clause in self.constraints:
+        for clause in req_consts:
             for k, v in clause.iteritems():
                 constraint_cols.setdefault(k, []).append(v)
-        self.constraint_cols = constraint_cols
 
         ### display_html
-        owner_field = [f for f in self.fields if f['name'] == 'owner']
+        owner_field = [f for f in fields if f['name'] == 'owner']
         if owner_field:
             TicketSystem(self.env).eventually_restrict_owner(owner_field[0])
 
         ###### template_data
         clauses_data = []
-        for clause in self.constraints:
+        for clause in req_consts:
             constraints = {}
             for k, v in clause.items():
                 constraint = {'values': [], 'mode': ''}
@@ -289,7 +296,7 @@ class TicketGanttChartPlugin(Component):
             clauses_data.append(constraints)
 
         fields_data = {'id': {'type': 'id', 'label': _("Ticket")}}
-        for field in self.fields:
+        for field in fields:
             name = field['name']
             if name == 'owner' and field['type'] == 'select':
                 # Make $USER work when restrict_owner = true
@@ -299,10 +306,10 @@ class TicketGanttChartPlugin(Component):
 
         ###### get_sql
         custom_join = ""
-        custom_fields = [f['name'] for f in self.fields if 'custom' in f]
+        custom_fields = [f['name'] for f in fields if 'custom' in f]
 
         # Join with ticket_custom table as necessary
-        for k in [k for k in self.constraint_cols if k in custom_fields]:
+        for k in [k for k in constraint_cols if k in custom_fields]:
             qk = db.quote(k)
             custom_join += (" LEFT OUTER JOIN ticket_custom AS %s ON " \
                             "(t.id=%s.ticket AND %s.name='%s')" % (qk, qk, qk, k))
@@ -323,9 +330,9 @@ class TicketGanttChartPlugin(Component):
                 col = '%s.value' % db.quote(name)
             value = value[len(mode) + neg:]
 
-            if name in self.time_fields:
+            if name in time_fields:
                 if '..' in value:
-                    (start, end) = [each.strip() for each in 
+                    (start, end) = [each.strip() for each in
                                     value.split('..', 1)]
                 else:
                     (start, end) = (value.strip(), '')
@@ -344,7 +351,7 @@ class TicketGanttChartPlugin(Component):
                             (end, ))
                 else:
                     return None
-                
+
             if mode == '~' and name == 'keywords':
                 words = value.split()
                 clauses, args = [], []
@@ -418,7 +425,7 @@ class TicketGanttChartPlugin(Component):
                         clauses.append('%s(%s)' % (neg and 'NOT ' or '',
                                                    ' OR '.join(id_clauses)))
                 # Special case for exact matches on multiple values
-                elif not mode and len(v) > 1 and k not in self.time_fields:
+                elif not mode and len(v) > 1 and k not in time_fields:
                     if k not in custom_fields:
                         col = 't.' + k
                     else:
@@ -445,93 +452,84 @@ class TicketGanttChartPlugin(Component):
         ########################
 
         # Disable owner Option
-        if self.constraint_cols.has_key('owner'):
+        if 'owner' in constraint_cols:
             show_my_ticket = None
         elif show_my_ticket == 'on':
-            if condition != "":
-                condition += " AND "
-            condition += "owner ='" + req.authname + "'"
-        # Sync resolution Filter
-        if self.constraint_cols.has_key('resolution'):
+            condition.append("owner=%s")
+            args.append(req.authname)
+
+        if 'resolution' in constraint_cols:  # Sync resolution Filter
             show_closed_ticket = 'on'
-        # Sync status Filter
-        elif self.constraint_cols.has_key('status'):
-            if [li for li in self.constraint_cols['status']
-                     if 'closed' in li]:
+        elif 'status' in constraint_cols:  # Sync status Filter
+            if any('closed' in li for li in constraint_cols['status']):
                 show_closed_ticket = 'on'
             else:
                 show_closed_ticket = None
         elif show_closed_ticket != 'on':
-            if condition != "":
-                condition += " AND "
-            condition += "status <> 'closed'"
+            condition.append("status<>'closed'")
+
         # Disable milestone Option
-        if self.constraint_cols.has_key('milestone'):
+        if 'milestone' in constraint_cols:
             selected_milestone = None
-        elif selected_milestone != None and selected_milestone !="":
-            if condition != "":
-                condition += " AND "
-            condition += "milestone ='" + selected_milestone +"'"
+        elif selected_milestone:
+            condition.append("milestone=%s")
+            args.append(selected_milestone)
+
         # Disable component Option
-        if self.constraint_cols.has_key('component'):
+        if 'component' in constraint_cols:
             selected_component = None
-        elif selected_component != None and selected_component !="":
-            if condition != "":
-                condition += " AND "
-            condition += "component ='" + selected_component +"'"
+        elif selected_component:
+            condition.append("component=%s")
+            args.append(selected_component)
 
-        args = []
         errors = []
-        clauses = filter(None, (get_clause_sql(c) for c in self.constraints))
-        if condition != "":
-            condition = "WHERE " + condition + " "
-            
-            if clauses:
-                condition += "AND ( "
-                condition += (" OR ".join('(%s)' % c for c in clauses)) + " )"
-        else:
-            if clauses:
-                condition = "WHERE " + (" OR ".join('(%s)' % c for c in clauses))
+        clauses = filter(None, (get_clause_sql(c) for c in req_consts))
+        if not condition:
+            condition.append('1=1')
+        condition = "WHERE " + " AND ".join(condition)
+        if clauses:
+            condition += " AND (%s)" % (" OR ".join('(%s)' % c for c in clauses))
 
-        sql = ("SELECT id, type, summary, owner, t.description, status, resolution, priority, a.value, c.value, cmp.value, est.value, tot.value, milestone, component "
-                "FROM ticket t "
-                "JOIN ticket_custom a ON a.ticket = t.id AND a.name = 'due_assign' "
-                "JOIN ticket_custom c ON c.ticket = t.id AND c.name = 'due_close' "
-                "JOIN ticket_custom cmp ON cmp.ticket = t.id AND cmp.name = 'complete' "
-                "LEFT OUTER JOIN ticket_custom est ON est.ticket = t.id AND est.name = 'estimatedhours' "
-                "LEFT OUTER JOIN ticket_custom tot ON tot.ticket = t.id AND tot.name = 'totalhours' "
-                "%s %s ORDER by %s , a.value ") % (custom_join, condition, sorted_field)
-        
-        self.log.debug(sql)
-        #self.log.debug(custom_join)
-        #self.log.debug(condition)
-        self.log.debug(clauses)
-        self.log.debug(args)
+        sql = """\
+            SELECT id, type, summary, owner, t.description, status, resolution,
+                   priority, a.value AS due_assign, c.value AS due_close,
+                   cmp.value AS complete, est.value AS estimatedhours,
+                   tot.value AS totalhours, milestone, component
+            FROM ticket t
+            JOIN ticket_custom a ON a.ticket=t.id AND a.name='due_assign'
+            JOIN ticket_custom c ON c.ticket=t.id AND c.name='due_close'
+            JOIN ticket_custom cmp ON cmp.ticket=t.id AND cmp.name='complete'
+            LEFT OUTER JOIN ticket_custom est ON est.ticket=t.id AND est.name='estimatedhours'
+            LEFT OUTER JOIN ticket_custom tot ON tot.ticket=t.id AND tot.name='totalhours'
+            %s %s ORDER BY %s, a.value""" % (custom_join, condition, sorted_field)
 
         if not errors:
             cursor.execute(sql, args)
-        else:
-            for error in errors:
-                add_warning(req, error)
+        for error in errors:
+            add_warning(req, error)
 
         sum_estimatedhours = 0.0
         sum_totalhours = 0.0
-        sum_est_isNone = True
+        sum_est_is_none = True
 
-        tickets=[]
-        for id, type, summary, owner, description, status, resolution, priority, due_assign, due_close, complete, estimatedhours, totalhours, milestone, component in cursor:
-            due_assign_date = None
-            due_close_date = None
+        tickets = []
+        column_names = get_column_names(cursor)
+        for row in cursor:
+            row = dict(zip(column_names, row))
             try:
-                t = time.strptime(due_assign, dateFormat)
-                due_assign_date = date(t[0],t[1],t[2])
+                t = time.strptime(row['due_assign'], dateFormat)
+                row['due_assign'] = date(t[0],t[1],t[2])
+            except ( TracError, ValueError, TypeError):
+                row['due_assign'] = None
+            try:
+                t = time.strptime(row['due_close'], dateFormat)
+                row['due_close'] = date(t[0],t[1],t[2])
             except ( TracError, ValueError, TypeError):
                 continue
-            try:
-                t = time.strptime(due_close, dateFormat)
-                due_close_date = date(t[0],t[1],t[2])
-            except ( TracError, ValueError, TypeError):
+            if row['due_assign'] > row['due_close']:
                 continue
+
+            complete = row['complete']
             if complete != None and len(complete)>1 and complete[len(complete)-1]=='%':
                 complete = complete[0:len(complete)-1]
             try:
@@ -539,83 +537,82 @@ class TicketGanttChartPlugin(Component):
                     complete = "100"
             except:
                 complete = "0"
-            complete = int(complete)
-            if due_assign_date > due_close_date:
-                continue
-            if milestone == None or milestone == "":
-                milestone = "*"
-            if component == None or component == "":
-                component = "*"
+            row['complete'] = complete = int(complete)
+
+            if not row['milestone']:
+                row['milestone'] = '*'
+            if not row['component']:
+                row['component'] = '*'
             # time tracking
-            if estimatedhours != None:
-                try:    estimatedhours = float(estimatedhours)
-                except: estimatedhours = 0.0
-                sum_estimatedhours += estimatedhours
-                sum_est_isNone = False
-            if totalhours != None:
-                try:    totalhours = float(totalhours)
-                except: totalhours = 0.0
-                sum_totalhours += totalhours
-            else: totalhours = 0.0
-            ticket = {'id':id, 'type':type, 'summary':summary, 'owner':owner, 'description': description, 'status':status,
-                    'resolution':resolution, 'priority':priority,
-                    'due_assign':due_assign_date, 'due_close':due_close_date, 'complete': complete, 
-                    'estimatedhours':estimatedhours, 'totalhours':totalhours,
-                    'milestone': milestone,'component': component}
-            #calc chart
-            base = (baseday -first_date).days + 1
-            done_start= done_end= None
-            late_start= late_end= None
-            todo_start= todo_end= None
-            all_start=(due_assign_date-first_date).days
-            all_end=(due_close_date-first_date).days + 1
-            done_start= all_start
-            done_end= done_start + (all_end - all_start)*int(complete)/100.0
-            if all_end <= base:
-                late_start= done_end
-                late_end= all_end
-            elif done_end <= base < all_end:
-                late_start= done_end
-                late_end= todo_start= base
-                todo_end= all_end
+            if row['estimatedhours']:
+                try:
+                    row['estimatedhours'] = float(row['estimatedhours'])
+                except:
+                    row['estimatedhours'] = 0.0
+                sum_estimatedhours += row['estimatedhours']
+                sum_est_is_none = False
+            if row['totalhours']:
+                try:
+                    row['totalhours'] = float(row['totalhours'])
+                except:
+                    row['totalhours'] = 0.0
+                sum_totalhours += row['totalhours']
             else:
-                todo_start= done_end
-                todo_end= all_end
+                row['totalhours'] = 0.0
+            ticket = row.copy()
+            #calc chart
+            base = (baseday - first_date).days + 1
+            done_start = done_end = None
+            late_start = late_end = None
+            todo_start = todo_end = None
+            all_start = (row['due_assign'] - first_date).days
+            all_end = (row['due_close'] - first_date).days + 1
+            done_start = all_start
+            done_end = done_start + (all_end - all_start) * int(complete) / 100.0
+            if all_end <= base:
+                late_start = done_end
+                late_end = all_end
+            elif done_end <= base < all_end:
+                late_start = done_end
+                late_end = todo_start= base
+                todo_end = all_end
+            else:
+                todo_start = done_end
+                todo_end = all_end
             #
-            done_start, done_end= self.adjust(done_start,done_end,days_term)
-            late_start, late_end= self.adjust(late_start,late_end,days_term)
-            todo_start, todo_end= self.adjust(todo_start,todo_end,days_term)
-            all_start, all_end= self.adjust(all_start,all_end,days_term)
+            done_start, done_end = self.adjust(done_start,done_end,days_term)
+            late_start, late_end = self.adjust(late_start,late_end,days_term)
+            todo_start, todo_end = self.adjust(todo_start,todo_end,days_term)
+            all_start, all_end = self.adjust(all_start,all_end,days_term)
 
-            if done_start != None:
-                ticket.update({'done_start':done_start,'done_end':done_end})
-            if late_start != None:
-                ticket.update({'late_start':late_start,'late_end':late_end})
-            if todo_start != None:
-                ticket.update({'todo_start':todo_start,'todo_end':todo_end})
-            if all_start != None:
-                ticket.update({'all_start':all_start,'all_end':all_end})
+            if done_start is not None:
+                ticket.update({'done_start': done_start, 'done_end': done_end})
+            if late_start is not None:
+                ticket.update({'late_start': late_start, 'late_end': late_end})
+            if todo_start is not None:
+                ticket.update({'todo_start': todo_start, 'todo_end': todo_end})
+            if all_start is not None:
+                ticket.update({'all_start': all_start, 'all_end': all_end})
 
-            self.log.debug(ticket)
             tickets.append(ticket)
+
         # time tracking
-        if sum_est_isNone: sum_estimatedhours = None
+        if sum_est_is_none:
+            sum_estimatedhours = None
 
         # milestones
-        milestones = {'':None}
-        sql = ("SELECT name, due, completed, description FROM milestone")
-        self.log.debug(sql)
+        milestones = {'': None}
+        sql = "SELECT name, due, completed, description FROM milestone"
         cursor.execute(sql)
         for name, due, completed, description in cursor:
             due_date = None
-            if due!=0:
+            if due != 0:
                 due_date = to_datetime(due, req.tz).date()
             item = { 'due':due_date, 'completed':completed != 0,'description':description}
             milestones.update({name:item})
         # componet
         components = [{}]
-        sql = ("SELECT name FROM component")
-        self.log.debug(sql)
+        sql = "SELECT name FROM component"
         cursor.execute(sql)
         for name, in cursor:
             components.append({'name':name})
@@ -625,20 +622,29 @@ class TicketGanttChartPlugin(Component):
         try:
             cursor.execute(sql)
             for hol_date,hol_desc in cursor:
-                holidays[hol_date]= hol_desc
+                holidays[hol_date] = hol_desc
         except:
             pass
 
-        data = {'baseday': baseday, 'current':cday, 'prev':prev, 'next':next, 'month_tbl': month_tbl}
-        data.update({'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'sorted_field': sorted_field})
-        data.update({'show_ticket_summary': show_ticket_summary, 'show_ticket_status': show_ticket_status, 'ti_mrgn': ticket_margin})
-        data.update({'selected_milestone':selected_milestone,'selected_component': selected_component})
-        data.update({'tickets':tickets,'milestones':milestones,'components':components})
-        data.update({'sum_estimatedhours':sum_estimatedhours, 'sum_totalhours':sum_totalhours})
-        data.update({'holidays':holidays,'first_date':first_date,'days_term':days_term})
-        data.update({'calendar':calendar})
-        data.update({'dateFormat': dateFormat ,'first_wkday':first_wkday,'normal':default_zoom_mode,'zoom':current_zoom_mode, '_':_})
-        data.update({'fields':fields_data, 'clauses':clauses_data, 'modes': self.get_modes()})
+        data = {
+            'baseday': baseday, 'current': cday, 'prev': prev, 'next': next,
+            'month_tbl': month_tbl, 'show_my_ticket': show_my_ticket,
+            'show_closed_ticket': show_closed_ticket,
+            'sorted_field': sorted_field,
+            'show_ticket_summary': show_ticket_summary,
+            'show_ticket_status': show_ticket_status,
+            'ti_mrgn': ticket_margin,
+            'selected_milestone': selected_milestone,
+            'selected_component': selected_component, 'tickets': tickets,
+            'milestones': milestones, 'components': components,
+            'sum_estimatedhours': sum_estimatedhours,
+            'sum_totalhours': sum_totalhours, 'holidays': holidays,
+            'first_date': first_date, 'days_term': days_term,
+            'calendar': calendar, 'dateFormat': dateFormat,
+            'first_wkday': first_wkday, 'normal': default_zoom_mode,
+            'zoom': current_zoom_mode, '_': _, 'fields': fields_data,
+            'clauses': clauses_data, 'modes': self.get_modes(),
+        }
 
         ### display_html
         properties = dict((name, dict((key, field[key])

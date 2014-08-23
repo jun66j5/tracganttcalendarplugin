@@ -189,6 +189,8 @@ class TicketGanttChartPlugin(Component):
         req.perm.require('TICKET_VIEW')
 
         tktsys = TicketSystem(self.env)
+        fields = tktsys.fields
+
         year  = req.args.get('year')
         month = req.args.get('month')
         baseday = req.args.get('baseday')
@@ -197,7 +199,7 @@ class TicketGanttChartPlugin(Component):
         show_my_ticket = req.args.get('show_my_ticket')
         show_closed_ticket = req.args.get('show_closed_ticket')
         sorted_field = req.args.get('sorted_field')
-        if not any(sorted_field == f['name'] for f in tktsys.fields):
+        if not any(sorted_field == f['name'] for f in fields):
             sorted_field = 'milestone'
         show_ticket_summary = req.args.get('show_ticket_summary')
         show_ticket_status = req.args.get('show_ticket_status')
@@ -261,7 +263,6 @@ class TicketGanttChartPlugin(Component):
 
         # filter for Trac 0.12.1
         ### __init__
-        fields = TicketSystem(self.env).get_ticket_fields()
         time_fields = set(f['name'] for f in fields if f['type'] == 'time')
 
         req_consts = self._get_constraints(req)
@@ -274,7 +275,7 @@ class TicketGanttChartPlugin(Component):
         ### display_html
         owner_field = [f for f in fields if f['name'] == 'owner']
         if owner_field:
-            TicketSystem(self.env).eventually_restrict_owner(owner_field[0])
+            tktsys.eventually_restrict_owner(owner_field[0])
 
         ###### template_data
         clauses_data = []

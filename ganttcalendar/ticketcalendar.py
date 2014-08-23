@@ -235,7 +235,7 @@ class TicketCalendarPlugin(Component):
                 'show_my_ticket': show_my_ticket, 'show_closed_ticket': show_closed_ticket, 'selected_milestone': selected_milestone,
                 '_':_,'dateFormat':dateFormat, 'holidays':holidays, 'month_tbl': month_tbl}
 
-        return 'calendar.html', data, None
+        return 'ganttcalendar_calendar.html', data, None
 
     def get_templates_dirs(self):
         from pkg_resources import resource_filename

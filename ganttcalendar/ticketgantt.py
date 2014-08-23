@@ -664,7 +664,7 @@ class TicketGanttChartPlugin(Component):
             # only Trac 0.12, not compatible with Trac 0.11.x
             add_script(req, 'tc/js/query.js')
 
-        return 'gantt.html', data, None
+        return 'ganttcalendar_gantt.html', data, None
 
     def get_templates_dirs(self):
         from pkg_resources import resource_filename

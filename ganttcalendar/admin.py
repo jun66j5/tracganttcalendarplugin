@@ -110,4 +110,5 @@ class HolidayAdminPanel(Component):
             cursor.execute(sql)
             for hol_date,hol_desc in cursor:
                 holidays.append( { 'date': hol_date, 'description': hol_desc})
-        return 'admin_holiday.html',{'_': _, 'holidays': holidays,'tbl_chk':tbl_chk}
+        data = {'_': _, 'holidays': holidays, 'tbl_chk': tbl_chk}
+        return 'ganttcalendar_admin_holiday.html', data

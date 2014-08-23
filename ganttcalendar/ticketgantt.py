@@ -189,7 +189,7 @@ class TicketGanttChartPlugin(Component):
         req.perm.require('TICKET_VIEW')
 
         tktsys = TicketSystem(self.env)
-        fields = tktsys.fields
+        fields = tktsys.get_ticket_fields()
 
         year  = req.args.get('year')
         month = req.args.get('month')
@@ -491,6 +491,14 @@ class TicketGanttChartPlugin(Component):
         if clauses:
             condition += " AND (%s)" % (" OR ".join('(%s)' % c for c in clauses))
 
+        if sorted_field not in ('due_assign', 'due_close', 'complete',
+                                'estimatedhours', 'totalhours') and \
+           any(f['name'] == sorted_field and f['custom'] for f in fields):
+            sort_expr = "(SELECT tc.value FROM ticket_custom tc " \
+                        "WHERE tc.ticket=t.id AND name=%s LIMIT 1)"
+            args.append(sorted_field)
+        else:
+            sort_expr = sorted_field
         sql = """\
             SELECT id, type, summary, owner, t.description, status, resolution,
                    priority, a.value AS due_assign, c.value AS due_close,
@@ -502,7 +510,7 @@ class TicketGanttChartPlugin(Component):
             JOIN ticket_custom cmp ON cmp.ticket=t.id AND cmp.name='complete'
             LEFT OUTER JOIN ticket_custom est ON est.ticket=t.id AND est.name='estimatedhours'
             LEFT OUTER JOIN ticket_custom tot ON tot.ticket=t.id AND tot.name='totalhours'
-            %s %s ORDER BY %s, a.value""" % (custom_join, condition, sorted_field)
+            %s %s ORDER BY %s, a.value""" % (custom_join, condition, sort_expr)
 
         if not errors:
             cursor.execute(sql, args)

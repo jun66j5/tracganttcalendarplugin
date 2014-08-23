@@ -206,9 +206,10 @@
             <td>
               <label>
               ${_('Sort by')}
-              <select name="sorted_field" style="font-size:100%">
-                <option value="milestone" selected="${sorted_field=='milestone' or None}">${_('Milestone')}</option>
-                <option value="component" selected="${sorted_field=='component' or None}">${_('Component')}</option>
+              <select name="sorted_field">
+                <option py:for="name in field_names" py:with="f = fields[name]"
+                        value="${f.name}"
+                        selected="${sorted_field == f.name and 'selected' or None}">${f.label}</option>
               </select>
               </label><br/>
             </td>

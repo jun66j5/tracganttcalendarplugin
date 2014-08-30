@@ -1,6 +1,9 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from setuptools import find_packages, setup
 
-extra = {} 
+extra = {}
 try:
     from trac.util.dist import get_l10n_cmdclass
     cmdclass = get_l10n_cmdclass()
@@ -23,7 +26,7 @@ setup(
     name='TracGanttCalendarPlugin', version='0.6.2',
     packages=find_packages(exclude=['*.tests*']),
 
-    author = "Takashi Okamoto",
+    author="Takashi Okamoto",
     author_email='okamototk@user.sourceforge.jp',
     url="http://sourceforge.jp/projects/shibuya-trac/",
     description='Provide calendar and ganttchart.',
@@ -37,5 +40,10 @@ setup(
         ganttcalendar.admin = ganttcalendar.admin
         ganttcalendar.ticketvalidator = ganttcalendar.ticketvalidator
     """,
-    package_data={'ganttcalendar': ['templates/*.html','htdocs/img/*','htdocs/js/*', 'locale/*.*','locale/*/LC_MESSAGES/*.*']},
+    package_data={
+        'ganttcalendar': [
+            'templates/*.html', 'htdocs/img/*.png', 'htdocs/js/*.js',
+            'locale/*/LC_MESSAGES/*.mo',
+        ],
+    },
     **extra)

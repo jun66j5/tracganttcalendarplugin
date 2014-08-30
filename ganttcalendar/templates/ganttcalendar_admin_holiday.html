@@ -7,6 +7,13 @@
   <xi:include href="admin.html" />
   <head>
     <title>${_('Holidays')}</title>
+    <script type="text/javascript">
+      jQuery(document).ready(function($) {
+        if ($.ui) {
+          $('form.addnew input[name=date]').datepicker();
+        }
+      });
+    </script>
   </head>
 
   <body>

@@ -6,6 +6,7 @@ from trac.admin import IAdminPanelProvider
 from trac.core import Component, implements, TracError
 from trac.env import IEnvironmentSetupParticipant
 from trac.util.datefmt import format_date, parse_date
+from trac.web.chrome import Chrome
 try:
     from trac.util.datefmt import user_time
 except ImportError:
@@ -17,6 +18,9 @@ except ImportError:
         return func(*args, **kwargs)
 
 from ganttcalendar.translation import _, add_domain
+
+
+has_jquery_ui = hasattr(Chrome, 'add_jquery_ui')
 
 
 class HolidayAdminPanel(Component):
@@ -78,6 +82,8 @@ class HolidayAdminPanel(Component):
             holidays = [dict(zip(columns, row)) for row in cursor]
             tbl_chk = True
 
+        if has_jquery_ui:
+            Chrome(self.env).add_jquery_ui(req)
         data = {'_': _, 'holidays': holidays, 'tbl_chk': tbl_chk}
         return 'ganttcalendar_admin_holiday.html', data
 

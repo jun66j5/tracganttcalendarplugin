@@ -24,9 +24,10 @@ class HolidayAdminPanel(Component):
     implements(IAdminPanelProvider, IEnvironmentSetupParticipant)
 
     def __init__(self):
-        import pkg_resources
-        locale_dir = pkg_resources.resource_filename(__name__, 'locale')
-        add_domain(self.env.path, locale_dir)
+        from pkg_resources import resource_filename, resource_exists
+        if resource_exists(__name__, 'locale'):
+            locale_dir = pkg_resources.resource_filename(__name__, 'locale')
+            add_domain(self.env.path, locale_dir)
 
     # Work around for untranslated messages when first-response
     # IEnvironmentSetupParticipant methods

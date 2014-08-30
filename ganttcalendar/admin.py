@@ -41,87 +41,106 @@ class HolidayAdminPanel(Component):
 
     def get_admin_panels(self, req):
         if 'TRAC_ADMIN' in req.perm:
-            yield ('ganttcalendar', u'Ganttcalendar', 'holiday', _('Holiday Setting'))
+            yield ('ganttcalendar', u'Ganttcalendar',
+                   'holiday', _('Holiday Setting'))
 
     def render_admin_panel(self, req, cat, page, path_info):
-        tbl_chk = True
-        db = self.env.get_db_cnx()
-        cursor = db.cursor();
-        sql = "SELECT count(*) from holiday"
-        try:
-            cursor.execute(sql)
-        except:
-            tbl_chk = False
-
         if req.method == 'POST':
+            fn = None
             if req.args.get('add'):
-                keydate = req.args.getfirst('date')
-                keydate = user_time(req, parse_date, keydate)
-                keydate = user_time(req, format_date, keydate,
-                                    format='iso8601')
-                cursor.execute("SELECT COUNT(*) FROM holiday WHERE date=%s",
-                               (keydate,))
-                for cnt, in cursor:
-                    dup_chk = cnt
-                if dup_chk != 0:
-                    raise TracError(_('Holiday %(date)s already exists.',
-                                      date=keydate))
-                cursor.execute("INSERT INTO holiday VALUES(%s,%s)",
-                               (keydate, req.args.get('description')))
-                db.commit()
-                req.redirect(req.href.admin(cat, page))
-
+                fn = self._process_add
             elif req.args.get('remove'):
-                sel = req.args.getlist('sel')
-                if not sel:
-                    raise TracError(_('No holiday selected'))
-                cursor.executemany("DELETE FROM holiday WHERE date=%s",
-                                   [(val,) for val in sel])
-                db.commit()
-                req.redirect(req.href.admin(cat, page))
-
+                fn = self._process_remove
             elif req.args.get('create_table'):
-                loc, enc = locale.getdefaultlocale()
-
-                self.log.debug("loc: %r", loc)
-                loc = (loc or '').lower()
-                if loc.startswith('ko_') or loc.startswith('korean_'):
-                   import holiday_ko
-                   holidays_tbl = holiday_ko.holidays_tbl
-                   self.log.debug("import holiday_ko")
-                elif loc.startswith('ja_') or loc.startswith('japanese_'):
-                   import holiday_ja
-                   holidays_tbl = holiday_ja.holidays_tbl
-                   self.log.debug("import holiday_ja")
-                else:
-                   holidays_tbl = {}
-                   self.log.debug('create empty holiday table')
-
-                sql = "CREATE TABLE holiday (date TEXT, description TEXT)"
-                cursor.execute(sql)
-                coltype = 'date'
-                if self.config.get('trac', 'database').startswith('mysql:'):
-                    coltype = 'date(10)'
-                sql = 'CREATE UNIQUE INDEX idx_holiday ON holiday (%s)' \
-                      % coltype
-                cursor.execute(sql)
-                cursor.executemany('INSERT INTO holiday VALUES(%s,%s)',
-                                   list(holidays_tbl.iteritems()))
-                db.commit()
-                req.redirect(req.href.admin(cat, page))
-
+                fn = self._process_create_table
             elif req.args.get('drop_table'):
-                sql = "DROP TABLE holiday"
-                cursor.execute(sql)
-                db.commit()
+                fn = self._process_drop_table
+            if fn:
+                fn(req, cat, page, path_info)
                 req.redirect(req.href.admin(cat, page))
 
-        #list
-        holidays = []
-        if tbl_chk:
-            sql = "SELECT date,description FROM holiday ORDER BY date"
-            cursor.execute(sql)
-            for hol_date,hol_desc in cursor:
-                holidays.append( { 'date': hol_date, 'description': hol_desc})
+        return self._process_list(req, cat, page, path_info)
+
+    def _process_list(self, req, cat, page, path_info):
+        db = self.env.get_read_db()
+        cursor = db.cursor()
+        tbl_chk = True
+        try:
+            cursor.execute("SELECT COUNT(*) FROM holiday")
+        except:
+            holidays = []
+            tbl_chk = False
+        else:
+            cursor.execute("SELECT date,description FROM holiday "
+                           "ORDER BY date")
+            columns = ('date', 'description')
+            holidays = [dict(zip(columns, row)) for row in cursor]
+            tbl_chk = True
+
         data = {'_': _, 'holidays': holidays, 'tbl_chk': tbl_chk}
         return 'ganttcalendar_admin_holiday.html', data
+
+    def _process_add(self, req, cat, page, path_info):
+        keydate = req.args.getfirst('date')
+        keydate = user_time(req, parse_date, keydate)
+        keydate = user_time(req, format_date, keydate, format='iso8601')
+
+        db = self.env.get_read_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT COUNT(*) FROM holiday WHERE date=%s",
+                       (keydate,))
+        row = cursor.fetchone()
+        if row[0] != 0:
+            raise TracError(_('Holiday %(date)s already exists.',
+                              date=keydate))
+
+        @self.env.with_transaction()
+        def fn(db):
+            description = req.args.getfirst('description')
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO holiday VALUES(%s,%s)",
+                           (keydate, description))
+
+    def _process_remove(self, req, cat, page, path_info):
+        sel = req.args.getlist('sel')
+        if not sel:
+            raise TracError(_('No holiday selected'))
+
+        @self.env.with_transaction()
+        def fn(db):
+            cursor = db.cursor()
+            cursor.executemany("DELETE FROM holiday WHERE date=%s",
+                               [(val,) for val in sel])
+
+    def _process_create_table(self, req, cat, page, path_info):
+        loc, enc = locale.getdefaultlocale()
+        loc = (loc or '').lower()
+
+        mod = None
+        if loc.startswith('ko_') or loc.startswith('korean_'):
+            import holiday_ko as mod
+        elif loc.startswith('ja_') or loc.startswith('japanese_'):
+            import holiday_ja as mod
+        if mod:
+            holidays_tbl = mod.holidays_tbl
+        else:
+            holidays_tbl = {}
+
+        @self.env.with_transaction()
+        def fn(db):
+            cursor = db.cursor()
+            cursor.execute(
+                "CREATE TABLE holiday (date TEXT, description TEXT)")
+            coltype = 'date'
+            if self.config.get('trac', 'database').startswith('mysql:'):
+                coltype = 'date(10)'
+            cursor.execute("CREATE UNIQUE INDEX idx_holiday ON holiday (%s)"
+                           % coltype)
+            cursor.executemany("INSERT INTO holiday VALUES(%s,%s)",
+                               list(holidays_tbl.iteritems()))
+
+    def _process_drop_table(self, req, cat, page, path_info):
+        @self.env.with_transaction()
+        def fn(db):
+            cursor = db.cursor()
+            cursor.execute("DROP TABLE holiday")

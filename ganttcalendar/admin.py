@@ -5,6 +5,16 @@ import locale
 from trac.admin import IAdminPanelProvider
 from trac.core import Component, implements, TracError
 from trac.env import IEnvironmentSetupParticipant
+from trac.util.datefmt import format_date, parse_date
+try:
+    from trac.util.datefmt import user_time
+except ImportError:
+    def user_time(req, func, *args, **kwargs):
+        if 'tzinfo' not in kwargs:
+            kwargs['tzinfo'] = getattr(req, 'tz', None)
+        if 'locale' not in kwargs:
+            kwargs['locale'] = getattr(req, 'locale', None)
+        return func(*args, **kwargs)
 
 from ganttcalendar.translation import _, add_domain
 
@@ -45,7 +55,10 @@ class HolidayAdminPanel(Component):
 
         if req.method == 'POST':
             if req.args.get('add'):
-                keydate = req.args.get('date')
+                keydate = req.args.getfirst('date')
+                keydate = user_time(req, parse_date, keydate)
+                keydate = user_time(req, format_date, keydate,
+                                    format='iso8601')
                 cursor.execute("SELECT COUNT(*) FROM holiday WHERE date=%s",
                                (keydate,))
                 for cnt, in cursor:

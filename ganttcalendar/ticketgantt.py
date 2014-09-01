@@ -307,7 +307,7 @@ class TicketGanttChartPlugin(Component):
 
         ###### get_sql
         custom_join = ""
-        custom_fields = [f['name'] for f in fields if 'custom' in f]
+        custom_fields = [f['name'] for f in fields if f.get('custom')]
 
         # Join with ticket_custom table as necessary
         for k in [k for k in constraint_cols if k in custom_fields]:
@@ -493,7 +493,7 @@ class TicketGanttChartPlugin(Component):
 
         if sorted_field not in ('due_assign', 'due_close', 'complete',
                                 'estimatedhours', 'totalhours') and \
-           any(f['name'] == sorted_field and f['custom'] for f in fields):
+           any(f['name'] == sorted_field and f.get('custom') for f in fields):
             sort_expr = "(SELECT tc.value FROM ticket_custom tc " \
                         "WHERE tc.ticket=t.id AND name=%s LIMIT 1)"
             args.append(sorted_field)

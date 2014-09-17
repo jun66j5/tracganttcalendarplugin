@@ -380,7 +380,7 @@
       <div style="position:absolute;background-color:gray;left:1px;top:1px;width:380px;height:${maxtic*px_ti+px_hd+1+px_height}px;">
         <div py:choose="" class="hdr" style="left:1px;top:1px;width: 89px;height:${px_hd-2}px;">
           <span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">
-            <span py:when="sorted_field=='milestone'">${_('Milestone')}</span><span py:otherwise="">${_('Component')}</span>
+            <span>${fields[sorted_field].label}</span>
           </span>
         </div>
         <div class="hdr" style="left:91px;top:1px;width:288px;height:${px_hd-2}px;"><span class="hdr_title" style="top:${(px_hd-2-16)/2}px;font-size:12px;">${_('Ticket')}</span></div>

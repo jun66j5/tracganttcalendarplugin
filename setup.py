@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 setup(
-    name='TracGanttCalendarPlugin', version='0.6.3',
+    name='TracGanttCalendarPlugin', version='0.6.4',
     packages=find_packages(exclude=['*.tests*']),
 
     author="Takashi Okamoto",

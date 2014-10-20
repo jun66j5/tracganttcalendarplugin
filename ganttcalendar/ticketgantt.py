@@ -527,13 +527,13 @@ class TicketGanttChartPlugin(Component):
             row = dict(zip(column_names, row))
             try:
                 t = time.strptime(row['due_assign'], dateFormat)
-                row['due_assign'] = date(t[0],t[1],t[2])
-            except ( TracError, ValueError, TypeError):
-                row['due_assign'] = None
+                row['due_assign'] = date(t[0], t[1], t[2])
+            except (TracError, ValueError, TypeError):
+                continue
             try:
                 t = time.strptime(row['due_close'], dateFormat)
-                row['due_close'] = date(t[0],t[1],t[2])
-            except ( TracError, ValueError, TypeError):
+                row['due_close'] = date(t[0], t[1], t[2])
+            except (TracError, ValueError, TypeError):
                 continue
             if row['due_assign'] > row['due_close']:
                 continue
